@@ -1,4 +1,3 @@
-import java.util.Map;
 
 public class Tile implements ITile{
 	private String value;

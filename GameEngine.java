@@ -1,6 +1,8 @@
 import java.util.List;
 
-public class GameEngine {
-	private Board gameBoard;
-	private List<User> users;
+public abstract class GameEngine {
+	protected Board gameBoard;
+	protected List<User> users;
+	
+	abstract boolean Action(String command);
 }
