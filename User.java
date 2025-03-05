@@ -2,8 +2,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class User {
-	private String name;
-	private Map<String, String> data;
+	protected String name;
+	protected Map<String, String> data;
+	protected Integer userId;
 	
 	public User(String name) {
 		this.name = name;
@@ -16,5 +17,9 @@ public abstract class User {
 	
 	public void SetScore(String gameId, String score) {
 		this.data.put(gameId, score);
+	}
+	
+	public String GetName() {
+		return this.name;
 	}
 }
