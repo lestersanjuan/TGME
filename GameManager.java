@@ -1,6 +1,8 @@
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class GameManager {
+public abstract class GameManager {
 	public enum GameState {
 		NotStarted,
 		InProgress,
@@ -16,29 +18,32 @@ public class GameManager {
 	
 	private GameState status;
 	private Result result;
-	private HomeScreen homeScreen;
-	private GameEngine gameEngine;
+	private GameEngine currentGameEngine;
 	private List<User> users;
 	private IInputHandler inputHandler;
+	private Map<Integer, GameEngine> games;
+	private Map<Integer, Map<Integer, Integer>> leaderboard; //GameId: UserId:Score
+
 	
-	public GameManager(List<User> users) {
+	public GameManager() {
 		this.status = GameState.NotStarted;
 		this.result = Result.Unset;
-		this.homeScreen = new HomeScreen();
-		this.users = users;
+		this.users = new ArrayList<User>();
+		// Set Games here
 	}
+	
+	abstract void AddUser(String name, Integer id);
+	
+	abstract User GetUser(Integer id);
+	
+	abstract void UpdateUser(User changedUser);
 	
 	public void SetGameEngine(GameEngine gameEngine) {
-		this.gameEngine = gameEngine;
-	}
-	
-	public void GetGameEngine() {
-		// Ask for Game engine through input
-		this.homeScreen.GetGameEngine(null);
+		this.currentGameEngine = gameEngine;
 	}
 	
 	public Board GetBoardState() {
-		return this.gameEngine.GetBoardState();
+		return this.currentGameEngine.GetBoardState();
 	}
 	
 	public Result GetResult() {
@@ -51,5 +56,13 @@ public class GameManager {
 	
 	public String GetInput() { //May not be used if a gui is being used
 		return this.inputHandler.GetInput();
+	}
+
+	public GameEngine GetGameEngine(Integer gameId) {
+		return this.games.get(gameId);
+	}
+	
+	public void SetNewScore(Integer gameId, Integer userId, Integer score) {
+		this.leaderboard.get(gameId).put(userId, score);
 	}
 }
