@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +19,7 @@ public abstract class GameManager {
 	private GameState status;
 	private Result result;
 	private GameEngine currentGameEngine;
-	private List<User> users;
+	private Map<Integer, User> users;
 	private IInputHandler inputHandler;
 	private Map<Integer, GameEngine> games;
 	private Map<Integer, Map<Integer, Integer>> leaderboard; //GameId: UserId:Score
@@ -28,15 +28,19 @@ public abstract class GameManager {
 	public GameManager() {
 		this.status = GameState.NotStarted;
 		this.result = Result.Unset;
-		this.users = new ArrayList<User>();
-		// Set Games here
+		this.users = new HashMap<Integer, User>();
+		// Set Games here after creating the game engine
 	}
 	
-	abstract void AddUser(String name, Integer id);
+	abstract void AddUser(String name, Integer id, List<String> data);
 	
-	abstract User GetUser(Integer id);
+	public User GetUser(Integer id) {
+		return this.users.get(id);
+	}
 	
-	abstract void UpdateUser(User changedUser);
+	public void UpdateUser(User changedUser) {
+		this.users.put(changedUser.userId, changedUser);
+	}
 	
 	public void SetGameEngine(GameEngine gameEngine) {
 		this.currentGameEngine = gameEngine;
