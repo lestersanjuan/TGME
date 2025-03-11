@@ -1,19 +1,31 @@
+import java.util.ArrayList;
 import java.util.List;
 
 public class Board {
-	private List<List<ITile>> currentBoard;
+	private List<List<List<ITile>>> currentBoard;
 	
 	private Integer width;
 	private Integer height;
 	
+	public Board(Integer width, Integer height) {
+		this.currentBoard = new ArrayList<List<List<ITile>>>();
+		for (int row = 0; row < height; row++) {
+			List<List<ITile>> curRow = new ArrayList<List<ITile>>();
+			
+			for (int col = 0; col < width; col++) {
+				curRow.add(new ArrayList<ITile>());
+			}
+			this.currentBoard.add(curRow);
+		}
+	}
+	
 	public void PlaceTile(ITile tile, Integer row, Integer col) {
-		this.currentBoard.get(row).set(col, tile);
+		this.currentBoard.get(row).get(col).add(tile);
 	}
 	
 	public ITile RemoveTile(Integer row, Integer col) {
 		
-		ITile tileRemoved = this.currentBoard.get(row).get(col);
-		this.currentBoard.get(row).remove(col.intValue());
+		ITile tileRemoved = this.currentBoard.get(row).get(col).remove(0);
 		return tileRemoved;
 	}
 	

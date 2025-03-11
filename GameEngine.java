@@ -13,4 +13,6 @@ public abstract class GameEngine {
 	public Board GetBoardState() {
 		return this.gameBoard; //Should return copy if possible
 	}
+	
+	abstract void MatchTiles();
 }
