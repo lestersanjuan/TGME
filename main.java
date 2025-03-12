@@ -4,5 +4,16 @@ public class main{
 
         TwentyFortyEightBoard man = new TwentyFortyEightBoard();
         System.out.println(man.getBoard());
+        man.addRandomTile();
+        System.out.println(man.getBoard());
+        man.addRandomTile();
+        System.out.println(man.getBoard());
+        man.addRandomTile();
+        System.out.println(man.getBoard());
+        man.addRandomTile();
+        System.out.println(man.getBoard());
+        man.addRandomTile();
+
+
     }
 }

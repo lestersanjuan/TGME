@@ -21,8 +21,8 @@ public class TwentyFortyEightBoard extends Board implements IInputHandler{
     public TwentyFortyEightBoard(){
         System.out.println("test");
         Random random = new Random();
-        Integer randomHeight = random.nextInt(1,4);
-        Integer randomWidth = random.nextInt(1,4);
+        Integer randomHeight = random.nextInt(4);
+        Integer randomWidth = random.nextInt(4);
         Integer randomStart = random.nextInt(1,2) * 2; //multiply by 2 to keep it a multiple of 2
         this.currentBoard = new ArrayList<>(HEIGHT);
         for (int i = 0; i < HEIGHT; i++){
@@ -56,6 +56,21 @@ public class TwentyFortyEightBoard extends Board implements IInputHandler{
         // TODO: can be called for whenever an action is done, should be checking if a tile
         // currently has a value or number on it. IDK the algo for it but if it does have 
         // a value just  keep calling random Indexes
+        boolean test = true;
+        while (test){
+            Random random = new Random();
+            Integer randomHeight = random.nextInt(4);
+            Integer randomWidth = random.nextInt(4);
+            Integer randomStart = random.nextInt(1,2) * 2;
+            System.out.println(this.currentBoard.get(randomHeight).get(randomWidth).GetValue());
+            if (this.currentBoard.get(randomHeight).get(randomWidth).GetValue().equals("0")){
+                System.out.println("testing");
+                Tile newTile = new Tile();
+                newTile.SetValue(randomStart.toString());
+                this.PlaceTile(newTile, 3, 2);
+                break;
+            }
+        }
     }
 
     public void isGameOver(){
