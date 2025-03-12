@@ -2,6 +2,7 @@
 public class Tile implements ITile{
 	private String value;
 
+	
 	@Override
 	public String GetValue() {
 		return this.value;

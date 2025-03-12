@@ -20,4 +20,13 @@ public class Board {
 	public Boolean IsInBounds(Integer row, Integer col) {
 		return (row >= 0) && (row < this.width) && (col >= 0) && (col < this.height);
 	}
+
+	public void setWidth(Integer width){
+		this.width = width;
+	}
+
+	public void setHeight(Integer height){
+		this.height = height;
+	}
 }
+

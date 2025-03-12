@@ -19,16 +19,21 @@ public class TwentyFortyEightBoard extends Board{
 
     public TwentyFortyEightBoard(){
         Random random = new Random();
-        Integer randomHeight = random.nextInt(1,2) * 2; //Multiply by 2
-        Integer randomWidth = random.nextInt(1,2) * 2;
-        Integer randomStart = random.nextInt(1,2) * 2;
-        
+        Integer randomHeight = random.nextInt(1,4);
+        Integer randomWidth = random.nextInt(1,4);
+        Integer randomStart = random.nextInt(1,2) * 2; //multiply by 2 to keep it a multiple of 2
+
+        for (int i = 0; i < 5; i++){
+            for (int j = 0; j < 5; j++){ //populate currentBoard with all new Tiles
+                Tile newTile = new Tile();
+                this.PlaceTile(newTile, i, j);
+            }
+        }
         Tile newTile = new Tile();
-        newTile.setValue()
+        newTile.SetValue(randomStart.toString());
         //Place First Tile
         this.PlaceTile(newTile, randomHeight, randomWidth);
-
-        
+        //Check If there is tile
     }
 
     
