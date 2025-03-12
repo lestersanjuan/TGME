@@ -1,3 +1,4 @@
+package BaseFolder;
 import java.util.Map;
 
 public interface ITile {

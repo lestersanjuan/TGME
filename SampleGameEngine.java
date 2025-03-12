@@ -1,9 +1,11 @@
+package BaseFolder;
 import java.util.List;
 
 public class SampleGameEngine extends GameEngine{
 	
-	public SampleGameEngine(List<User> users) {
+	public SampleGameEngine(String name) {
 		this.gameBoard = new Board(1, 1);
+		this.gameName = name;
 	}
 	
 	@Override
