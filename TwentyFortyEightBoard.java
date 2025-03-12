@@ -52,7 +52,18 @@ public class TwentyFortyEightBoard extends Board implements IInputHandler{
         return this.currentBoard;
     }
 
-    //Algorithms for how the game 
+    public void addRandomTile(){
+        // TODO: can be called for whenever an action is done, should be checking if a tile
+        // currently has a value or number on it. IDK the algo for it but if it does have 
+        // a value just  keep calling random Indexes
+    }
+
+    public void isGameOver(){
+        // TODO: called after every move, will check if there are any more moves that can be done
+        // If not call isGameOver in every iteration. If it returns true then it is Game Over
+    }
+    
+    //Algorithms for how the game should be run
     @Override
     public String GetInput() {
         // TODO Auto-generated method stub
