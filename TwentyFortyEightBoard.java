@@ -9,7 +9,7 @@ import java.util.Random;
  * or down will 
 */
     
-public class TwentyFortyEightBoard extends Board{
+public class TwentyFortyEightBoard extends Board implements IInputHandler{
     private final Integer WIDTH = 4; // Game board does not change sizes
     private final Integer HEIGHT = 4;
 
@@ -51,6 +51,35 @@ public class TwentyFortyEightBoard extends Board{
         }
         return this.currentBoard;
     }
+
+    //Algorithms for how the game 
+    @Override
+    public String GetInput() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'GetInput'");
+    }
+    @Override
+    public void Left() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'Left'");
+    }
+    @Override
+    public void Right() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'Right'");
+    }
+    @Override
+    public void Up() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'Up'");
+    }
+    @Override
+    public void Down() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'Down'");
+    }
+
+
 
     
 }
