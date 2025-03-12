@@ -46,6 +46,7 @@ public abstract class GameManager {
 		this.currentGameEngine = gameEngine;
 	}
 	
+	//
 	public Board GetBoardState() {
 		return this.currentGameEngine.GetBoardState();
 	}

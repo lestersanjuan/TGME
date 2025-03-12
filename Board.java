@@ -1,7 +1,7 @@
 import java.util.List;
 
 public class Board {
-	protected List<List<Tile>> currentBoard;
+	protected List<List<Tile>> currentBoard; //Will have a new 3rd list
 	
 	private Integer width;
 	private Integer height;
