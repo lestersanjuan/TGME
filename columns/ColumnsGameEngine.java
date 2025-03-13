@@ -9,7 +9,7 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
     private ColumnsBoard board;
     private TileFactory tileFactory;
     private boolean gameRunning;
-    private static final int INVISIBLE_HEIGHT = 15; // Invisible height limit
+    private static final int INVISIBLE_HEIGHT = 16; // Invisible height limit
     
     // Track the height of each column separately from the visible board
     private int[] columnHeights;
@@ -60,15 +60,20 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
     
         System.out.println("Welcome to Columns!");
         System.out.println("Pieces will fall one block at a time.");
-        System.out.println("Controls: 'a' or left arrow to move left, 'd' or right arrow to move right");
-        System.out.println("          's' to rotate down");
+        System.out.println("Controls: 'a' or j=left, 'd' or l=right, 's'=rotate down");
         System.out.println("Press Enter to start the game (press Ctrl+C to quit)...");
         scanner.nextLine();
         
+        gameRunning = true;
+
         while (gameRunning) {
-            boolean success = Action(""); // Can be replaced with dropPieceWithUserControl but this uses the Action method
+            boolean success = Action(""); 
+            
             // If Action returns false, the game is over
             if (!success) {
+                gameRunning = false;
+                System.out.println("Press Enter to exit...");
+                scanner.nextLine();
                 break;
             }
         }
@@ -89,6 +94,12 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         
         // Start with the piece just above the board
         int topRow = -pieceLength;
+        
+        // Check if the starting column is already too high
+        if (columnHeights[currentCol] >= INVISIBLE_HEIGHT - pieceLength) {
+            // Game is already over, can't place the piece
+            return false;
+        }
         
         // Continue dropping until the piece lands
         while (true) {
@@ -112,11 +123,28 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             
             drawBoard();
             
-            // Check for collision
+            // Check for collision for the next position below
             if (isCollision(topRow + 1, currentCol, pieceLength)) {
-                // Update column height
-                columnHeights[currentCol] += pieceLength;
+                // Make sure all tiles are properly placed on the board
+                for (int i = 0; i < pieceLength; i++) {
+                    int row = topRow + i;
+                    if (row >= 0 && row < board.getHeight()) {
+                        board.placeTile(columnPiece.get(i), row, currentCol);
+                    }
+                }
+                
+                // Update column height - count all tiles in the column
+                int newHeight = 0;
+                for (int row = 0; row < board.getHeight(); row++) {
+                    if (!board.isEmpty(row, currentCol)) {
+                        newHeight++;
+                    }
+                }
+                columnHeights[currentCol] = newHeight;
+                
+                // Check if the game is over
                 if (columnHeights[currentCol] >= INVISIBLE_HEIGHT) {
+                    // Game over - don't modify the board further
                     return false;
                 }
                 return true;
@@ -127,46 +155,101 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             String input = scanner.nextLine().trim().toLowerCase();
             
             if (input.equals("a") || input.equals("j")) { // 'a' or 'j' for left
-                if (currentCol > 0 && !isCollision(topRow, currentCol - 1, pieceLength)) {
-                    // Clear current position
-                    for (int i = 0; i < pieceLength; i++) {
-                        int row = topRow + i;
-                        if (row >= 0 && row < board.getHeight()) {
-                            board.placeTile(null, row, currentCol);
+                if (currentCol > 0) {
+                    // Check if there's an existing column in the target position
+                    int landingHeight = findLandingHeight(currentCol - 1);
+                    
+                    // If landing height is high enough that we'd land on top of the column
+                    if (landingHeight >= 0 && landingHeight < topRow + pieceLength) {
+                        // Clear current position
+                        for (int i = 0; i < pieceLength; i++) {
+                            int row = topRow + i;
+                            if (row >= 0 && row < board.getHeight()) {
+                                board.placeTile(null, row, currentCol);
+                            }
                         }
+                        
+                        // Place the piece on top of the existing column
+                        int newTopRow = landingHeight - pieceLength + 1;
+                        for (int i = 0; i < pieceLength; i++) {
+                            int row = newTopRow + i;
+                            if (row >= 0 && row < board.getHeight()) {
+                                board.placeTile(columnPiece.get(i), row, currentCol - 1);
+                            }
+                        }
+                        
+                        // Update column height
+                        int newHeight = 0;
+                        for (int row = 0; row < board.getHeight(); row++) {
+                            if (!board.isEmpty(row, currentCol - 1)) {
+                                newHeight++;
+                            }
+                        }
+                        columnHeights[currentCol - 1] = newHeight;
+                        
+                        drawBoard();
+                        return true; // Piece has landed
                     }
-                    currentCol--;
+                    // Normal left movement if there's no collision
+                    else if (!isCollision(topRow, currentCol - 1, pieceLength)) {
+                        // Clear current position
+                        for (int i = 0; i < pieceLength; i++) {
+                            int row = topRow + i;
+                            if (row >= 0 && row < board.getHeight()) {
+                                board.placeTile(null, row, currentCol);
+                            }
+                        }
+                        currentCol--;
+                    }
                 }
             } else if (input.equals("d") || input.equals("l")) { // 'd' or 'l' for right
-                if (currentCol < board.getWidth() - 1 && !isCollision(topRow, currentCol + 1, pieceLength)) {
-                    // Clear current position
-                    for (int i = 0; i < pieceLength; i++) {
-                        int row = topRow + i;
-                        if (row >= 0 && row < board.getHeight()) {
-                            board.placeTile(null, row, currentCol);
+                if (currentCol < board.getWidth() - 1) {
+                    // Check if there's an existing column in the target position
+                    int landingHeight = findLandingHeight(currentCol + 1);
+                    
+                    // If landing height is high enough that we'd land on top of the column
+                    if (landingHeight >= 0 && landingHeight < topRow + pieceLength) {
+                        // Clear current position
+                        for (int i = 0; i < pieceLength; i++) {
+                            int row = topRow + i;
+                            if (row >= 0 && row < board.getHeight()) {
+                                board.placeTile(null, row, currentCol);
+                            }
                         }
+                        
+                        // Place the piece on top of the existing column
+                        int newTopRow = landingHeight - pieceLength + 1;
+                        for (int i = 0; i < pieceLength; i++) {
+                            int row = newTopRow + i;
+                            if (row >= 0 && row < board.getHeight()) {
+                                board.placeTile(columnPiece.get(i), row, currentCol + 1);
+                            }
+                        }
+                        
+                        // Update column height
+                        int newHeight = 0;
+                        for (int row = 0; row < board.getHeight(); row++) {
+                            if (!board.isEmpty(row, currentCol + 1)) {
+                                newHeight++;
+                            }
+                        }
+                        columnHeights[currentCol + 1] = newHeight;
+                        
+                        drawBoard();
+                        return true; // Piece has landed
                     }
-                    currentCol++;
+                    // Normal right movement if there's no collision
+                    else if (!isCollision(topRow, currentCol + 1, pieceLength)) {
+                        // Clear current position
+                        for (int i = 0; i < pieceLength; i++) {
+                            int row = topRow + i;
+                            if (row >= 0 && row < board.getHeight()) {
+                                board.placeTile(null, row, currentCol);
+                            }
+                        }
+                        currentCol++;
+                    }
                 }
-
-                // CODE BELOW THIS IS FOR A UPWARDS ROTATION WHICH IS NOT FOUND IN THE ORIGINAL GAME. IMPLEMENT OR DON'T!!!
-            // } else if (input.equals("w") || input.equals("i")) { // 'w' or 'i' for rotate up
-            //     // Rotate the tiles up (top becomes bottom, others move up)
-            //     // First, clear the current position
-            //     for (int i = 0; i < pieceLength; i++) {
-            //         int row = topRow + i;
-            //         if (row >= 0 && row < board.getHeight()) {
-            //             board.placeTile(null, row, currentCol);
-            //         }
-            //     }
-                
-            //     // Perform the rotation: top -> bottom, middle -> top, bottom -> middle
-            //     ITile temp = columnPiece.get(0); // Save the top tile
-            //     columnPiece.set(0, columnPiece.get(1)); // Move middle to top
-            //     columnPiece.set(1, columnPiece.get(2)); // Move bottom to middle
-            //     columnPiece.set(2, temp); // Move saved top to bottom
-                
-            //     continue;
             } else if (input.equals("s") || input.equals("k")) { // 's' or 'k' for rotate down
                 // Rotate the tiles down (bottom becomes top, others move down)
                 for (int i = 0; i < pieceLength; i++) {
@@ -181,7 +264,7 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
                 for (int i = pieceLength - 1; i > 0; i--) {
                     columnPiece.set(i, columnPiece.get(i - 1)); // Move each tile down
                 }
-
+    
                 columnPiece.set(0, temp); // Move saved bottom to top
                 continue;
             }
@@ -200,16 +283,16 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
      */
     private boolean isCollision(int topRow, int col, int pieceLength) {
         // Check if piece would go out of bounds at the bottom
-        if (topRow + pieceLength - 1 >= board.getHeight()) {
+        if (topRow + pieceLength > board.getHeight()) {
             return true;
         }
-        
+
         // Check if any part of the piece would collide with existing tiles
         for (int i = 0; i < pieceLength; i++) {
             int row = topRow + i;
             if (row >= 0 && row < board.getHeight()) {
-                if (!board.isEmpty(row, col) && board.getTile(row, col) != null) {
-                    // Check if this is not part of the current piece
+                // Only check for collision with tiles that aren't part of the current piece
+                if (board.getTile(row, col) != null) {
                     boolean isCurrentPiece = false;
                     for (int j = 0; j < pieceLength; j++) {
                         int currentPieceRow = topRow - 1 + j;
@@ -226,6 +309,20 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         }
         
         return false;
+    }
+
+    /**
+     * Special collision check for horizontal movement
+     * When moving horizontally, we need to check if the piece would land on top of an existing column
+     */
+    private int findLandingHeight(int col) {
+        // Find the first empty row from the bottom
+        for (int row = board.getHeight() - 1; row >= 0; row--) {
+            if (board.isEmpty(row, col)) {
+                return row;
+            }
+        }
+        return -1;
     }
     
     /**
