@@ -9,12 +9,12 @@ public class SampleGameEngine extends GameEngine{
 	}
 	
 	@Override
-	boolean Action(String command) {
+	public boolean Action(String command) {
 		return command.equals("action");
 	}
 
 	@Override
-	void MatchTiles() {
+	public void MatchTiles() {
 		// TODO Auto-generated method stub
 		
 	}

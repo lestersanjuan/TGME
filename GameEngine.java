@@ -6,7 +6,7 @@ public abstract class GameEngine {
 	protected Integer gameId;
 	protected Integer score;
 	
-	abstract boolean Action(String command);
+	public abstract boolean Action(String command);
 	
 	public Integer GetGameId() {
 		return this.gameId;
@@ -20,5 +20,5 @@ public abstract class GameEngine {
 		return this.gameName;
 	}
 	
-	abstract void MatchTiles();
+	public abstract void MatchTiles();
 }
