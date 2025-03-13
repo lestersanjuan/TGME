@@ -5,11 +5,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
-public class ColumnsGameEngine {
+public class ColumnsGameEngine extends GameEngine.GameEngine{
     private ColumnsBoard board;
     private TileFactory tileFactory;
     private boolean gameRunning;
-    private static final int FALL_DELAY_MS = 1000; // 1 second delay between falls
     private static final int INVISIBLE_HEIGHT = 15; // Invisible height limit
     
     // Track the height of each column separately from the visible board
@@ -28,125 +27,421 @@ public class ColumnsGameEngine {
             columnHeights[i] = 0;
         }
     }
+
+    @Override
+    public void MatchTiles() {
+        checkAndClearMatches();
+    }
+
+    @Override
+    public boolean Action(String command) {
+        List<ITile> columnPiece = tileFactory.createColumn();
+        int middleCol = board.getWidth() / 2;
+        Scanner scanner = new Scanner(System.in);
+        boolean pieceDropped = dropPieceWithUserControl(columnPiece, middleCol, scanner);
+        
+        // Game is lost if piece can't be dropped
+        if (!pieceDropped) {
+            gameRunning = false;
+            drawBoard(); // Final board state
+            System.out.println("Game Over! A column has exceeded the height limit.");
+            return false;
+        }
+    
+        MatchTiles();    
+        return true;
+    }
     
     /**
      * Start the game loop
      */
     public void startGame() {
         Scanner scanner = new Scanner(System.in);
-        
+    
         System.out.println("Welcome to Columns!");
-        System.out.println("Pieces will fall one block per second from the middle of the board.");
+        System.out.println("Pieces will fall one block at a time.");
+        System.out.println("Controls: 'a' or left arrow to move left, 'd' or right arrow to move right");
+        System.out.println("          's' to rotate down");
         System.out.println("Press Enter to start the game (press Ctrl+C to quit)...");
         scanner.nextLine();
         
-        // Always drop from the middle column
-        int middleCol = board.getWidth() / 2;
-        
         while (gameRunning) {
-            // Create a new column piece
-            List<ITile> columnPiece = tileFactory.createColumn();
-            
-            // Start dropping the piece from the top
-            boolean pieceDropped = dropPiece(columnPiece, middleCol);
-            
-            // If we couldn't drop the piece, the game is over
-            if (!pieceDropped) {
-                gameRunning = false;
-                drawBoard(); // Final board state
-                System.out.println("Game Over! A column has exceeded the height limit.");
+            boolean success = Action(""); // Can be replaced with dropPieceWithUserControl but this uses the Action method
+            // If Action returns false, the game is over
+            if (!success) {
                 break;
             }
-            
-            // Check for matches and clear them (Placeholder!!!)
-            checkAndClearMatches();
         }
         
         scanner.close();
     }
     
     /**
-     * Drop a piece from the top to the bottom of the board
+     * Drop a piece with user control
      * @param columnPiece The column piece (list of 3 tiles)
-     * @param col The column to drop the piece in
+     * @param startCol The starting column
+     * @param scanner Scanner for user input
      * @return true if the piece was dropped successfully, false otherwise
      */
-    private boolean dropPiece(List<ITile> columnPiece, int col) {
-        int pieceLength = columnPiece.size(); // Should be 3 for a standard column
-        
-        // Check if adding this piece would exceed the invisible height limit
-        if (columnHeights[col] + pieceLength > INVISIBLE_HEIGHT) {
-            return false;
-        }
-        
-        // Find the lowest position where the piece can be placed
-        int lowestEmptyRow = getLowestEmptyRow(col);
-        
-        // Calculate the final position of the top of the piece
-        int finalTopRow = lowestEmptyRow - (pieceLength - 1);
+    private boolean dropPieceWithUserControl(List<ITile> columnPiece, int startCol, Scanner scanner) {
+        int pieceLength = columnPiece.size(); // 3
+        int currentCol = startCol;
         
         // Start with the piece just above the board
         int topRow = -pieceLength;
         
-        // Animation loop - drop the piece one row at a time
-        while (topRow <= finalTopRow) {
-            // Clear previous position
+        // Continue dropping until the piece lands
+        while (true) {
+            // Clear the previous position if needed
             if (topRow > -pieceLength) {
                 for (int i = 0; i < pieceLength; i++) {
                     int row = topRow + i - 1;
                     if (row >= 0 && row < board.getHeight()) {
-                        board.placeTile(null, row, col);
+                        board.placeTile(null, row, currentCol);
                     }
                 }
             }
             
-            // Place the piece at new position
+            // Place the piece at the new position
             for (int i = 0; i < pieceLength; i++) {
                 int row = topRow + i;
                 if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(columnPiece.get(i), row, col);
+                    board.placeTile(columnPiece.get(i), row, currentCol);
                 }
             }
             
             drawBoard();
             
-            // Wait for 1 second
-            try {
-                TimeUnit.MILLISECONDS.sleep(FALL_DELAY_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            // Check for collision
+            if (isCollision(topRow + 1, currentCol, pieceLength)) {
+                // Update column height
+                columnHeights[currentCol] += pieceLength;
+                if (columnHeights[currentCol] >= INVISIBLE_HEIGHT) {
+                    return false;
+                }
+                return true;
             }
             
+            // Get user input
+            System.out.println("Move (a/j=left, d/l=right, s=rotate down, enter=down): ");
+            String input = scanner.nextLine().trim().toLowerCase();
+            
+            if (input.equals("a") || input.equals("j")) { // 'a' or 'j' for left
+                if (currentCol > 0 && !isCollision(topRow, currentCol - 1, pieceLength)) {
+                    // Clear current position
+                    for (int i = 0; i < pieceLength; i++) {
+                        int row = topRow + i;
+                        if (row >= 0 && row < board.getHeight()) {
+                            board.placeTile(null, row, currentCol);
+                        }
+                    }
+                    currentCol--;
+                }
+            } else if (input.equals("d") || input.equals("l")) { // 'd' or 'l' for right
+                if (currentCol < board.getWidth() - 1 && !isCollision(topRow, currentCol + 1, pieceLength)) {
+                    // Clear current position
+                    for (int i = 0; i < pieceLength; i++) {
+                        int row = topRow + i;
+                        if (row >= 0 && row < board.getHeight()) {
+                            board.placeTile(null, row, currentCol);
+                        }
+                    }
+                    currentCol++;
+                }
+
+                // CODE BELOW THIS IS FOR A UPWARDS ROTATION WHICH IS NOT FOUND IN THE ORIGINAL GAME. IMPLEMENT OR DON'T!!!
+            // } else if (input.equals("w") || input.equals("i")) { // 'w' or 'i' for rotate up
+            //     // Rotate the tiles up (top becomes bottom, others move up)
+            //     // First, clear the current position
+            //     for (int i = 0; i < pieceLength; i++) {
+            //         int row = topRow + i;
+            //         if (row >= 0 && row < board.getHeight()) {
+            //             board.placeTile(null, row, currentCol);
+            //         }
+            //     }
+                
+            //     // Perform the rotation: top -> bottom, middle -> top, bottom -> middle
+            //     ITile temp = columnPiece.get(0); // Save the top tile
+            //     columnPiece.set(0, columnPiece.get(1)); // Move middle to top
+            //     columnPiece.set(1, columnPiece.get(2)); // Move bottom to middle
+            //     columnPiece.set(2, temp); // Move saved top to bottom
+                
+            //     continue;
+            } else if (input.equals("s") || input.equals("k")) { // 's' or 'k' for rotate down
+                // Rotate the tiles down (bottom becomes top, others move down)
+                for (int i = 0; i < pieceLength; i++) {
+                    int row = topRow + i;
+                    if (row >= 0 && row < board.getHeight()) {
+                        board.placeTile(null, row, currentCol);
+                    }
+                }
+                
+                // Perform the rotation: bottom -> top, middle -> bottom, top -> middle
+                ITile temp = columnPiece.get(pieceLength - 1); // Save the bottom tile
+                for (int i = pieceLength - 1; i > 0; i--) {
+                    columnPiece.set(i, columnPiece.get(i - 1)); // Move each tile down
+                }
+
+                columnPiece.set(0, temp); // Move saved bottom to top
+                continue;
+            }
+            
+            // Only move down if we didn't rotate
             topRow++;
         }
-        columnHeights[col] += pieceLength;
-        if (columnHeights[col] >= INVISIBLE_HEIGHT) {
-            return false;
+    }
+    
+    /**
+     * Check if placing the piece would cause a collision
+     * @param topRow The top row of the piece
+     * @param col The column of the piece
+     * @param pieceLength The length of the piece
+     * @return true if there would be a collision, false otherwise
+     */
+    private boolean isCollision(int topRow, int col, int pieceLength) {
+        // Check if piece would go out of bounds at the bottom
+        if (topRow + pieceLength - 1 >= board.getHeight()) {
+            return true;
+        }
+        
+        // Check if any part of the piece would collide with existing tiles
+        for (int i = 0; i < pieceLength; i++) {
+            int row = topRow + i;
+            if (row >= 0 && row < board.getHeight()) {
+                if (!board.isEmpty(row, col) && board.getTile(row, col) != null) {
+                    // Check if this is not part of the current piece
+                    boolean isCurrentPiece = false;
+                    for (int j = 0; j < pieceLength; j++) {
+                        int currentPieceRow = topRow - 1 + j;
+                        if (currentPieceRow == row) {
+                            isCurrentPiece = true;
+                            break;
+                        }
+                    }
+                    if (!isCurrentPiece) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check for matches and clear them
+     */
+    private void checkAndClearMatches() {
+        boolean matchesFound = false;
+        boolean[][] tilesToClear = new boolean[board.getHeight()][board.getWidth()];
+        
+        // Check for horizontal matches
+        for (int row = 0; row < board.getHeight(); row++) {
+            for (int col = 0; col < board.getWidth() - 2; col++) {
+                ITile tile = board.getTile(row, col);
+                if (tile != null) {
+                    if (checkMatch(row, col, 0, 1, 3)) {
+                        for (int i = 0; i < 3; i++) {
+                            tilesToClear[row][col + i] = true;
+                        }
+                        matchesFound = true;
+                    }
+                }
+            }
+        }
+        
+        // Check for vertical matches
+        for (int row = 0; row < board.getHeight() - 2; row++) {
+            for (int col = 0; col < board.getWidth(); col++) {
+                ITile tile = board.getTile(row, col);
+                if (tile != null) {
+                    if (checkMatch(row, col, 1, 0, 3)) {
+                        for (int i = 0; i < 3; i++) {
+                            tilesToClear[row + i][col] = true;
+                        }
+                        matchesFound = true;
+                    }
+                }
+            }
+        }
+        
+        // Check for diagonal matches (top-left to bottom-right)
+        for (int row = 0; row < board.getHeight() - 2; row++) {
+            for (int col = 0; col < board.getWidth() - 2; col++) {
+                ITile tile = board.getTile(row, col);
+                if (tile != null) {
+                    if (checkMatch(row, col, 1, 1, 3)) {
+                        for (int i = 0; i < 3; i++) {
+                            tilesToClear[row + i][col + i] = true;
+                        }
+                        matchesFound = true;
+                    }
+                }
+            }
+        }
+        
+        // Check for diagonal matches (top-right to bottom-left)
+        for (int row = 0; row < board.getHeight() - 2; row++) {
+            for (int col = 2; col < board.getWidth(); col++) {
+                ITile tile = board.getTile(row, col);
+                if (tile != null) {
+                    if (checkMatch(row, col, 1, -1, 3)) {
+                        for (int i = 0; i < 3; i++) {
+                            tilesToClear[row + i][col - i] = true;
+                        }
+                        matchesFound = true;
+                    }
+                }
+            }
+        }
+        
+        // If matches were found, clear the tiles and move others down
+        if (matchesFound) {
+            // Display the matches before clearing
+            replaceMatches(tilesToClear);
+            
+            // Clear matched tiles
+            for (int col = 0; col < board.getWidth(); col++) {
+                // Count how many tiles to remove in this column
+                int tilesRemoved = 0;
+                for (int row = 0; row < board.getHeight(); row++) {
+                    if (tilesToClear[row][col]) {
+                        tilesRemoved++;
+                        board.placeTile(null, row, col);
+                    }
+                }
+                
+                // Update column height
+                if (tilesRemoved > 0) {
+                    columnHeights[col] -= tilesRemoved;
+                    if (columnHeights[col] < 0) columnHeights[col] = 0;
+                }
+            }
+            
+            applyGravity();
+            MatchTiles();
+        }
+    }
+
+    /**
+     * Check if there is a match of n tiles starting from (row,col) and moving in the direction (rowDir,colDir)
+     */
+    private boolean checkMatch(int row, int col, int rowDir, int colDir, int n) {
+        ITile firstTile = board.getTile(row, col);
+        if (firstTile == null) return false;
+        
+        for (int i = 1; i < n; i++) {
+            int newRow = row + i * rowDir;
+            int newCol = col + i * colDir;
+            
+            // Check bounds
+            if (newRow < 0 || newRow >= board.getHeight() || newCol < 0 || newCol >= board.getWidth()) {
+                return false;
+            }
+            
+            ITile nextTile = board.getTile(newRow, newCol);
+            if (nextTile == null || !nextTile.GetValue().equals(firstTile.GetValue())) {
+                return false;
+            }
         }
         
         return true;
     }
-    
+
     /**
-     * Find the lowest empty position in a column
-     * @param col The column to check
-     * @return The row index of the lowest empty position, or -1 if column is full
+     * Replace matches before clearing them by replacing them with 'X' characters
      */
-    private int getLowestEmptyRow(int col) {
-        for (int row = board.getHeight() - 1; row >= 0; row--) {
-            if (board.isEmpty(row, col)) {
-                return row;
+    private void replaceMatches(boolean[][] tilesToClear) {
+        // Create a copy of the board for replacement
+        ITile[][] boardCopy = new ITile[board.getHeight()][board.getWidth()];
+        for (int row = 0; row < board.getHeight(); row++) {
+            for (int col = 0; col < board.getWidth(); col++) {
+                boardCopy[row][col] = board.getTile(row, col);
+                
+                // If this is a tile to clear, create a temporary copy for the visual effect
+                if (tilesToClear[row][col] && boardCopy[row][col] != null) {
+                    // Use the existing tile but change its value to 'X'
+                    ITile originalTile = board.getTile(row, col);
+                    originalTile.SetValue("X");
+                }
             }
         }
-        return -1; // Column is full
+        
+        drawBoard();
+        System.out.println("Matches found! Clearing...");
+        
+        // Pause briefly to show the highlights
+        try {
+            TimeUnit.MILLISECONDS.sleep(875);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        // Restore the original board (the matches will be cleared in the calling method)
+        for (int row = 0; row < board.getHeight(); row++) {
+            for (int col = 0; col < board.getWidth(); col++) {
+                // If this was a tile to clear, restore its original value
+                if (tilesToClear[row][col] && boardCopy[row][col] != null) {
+                    // We'll place the original tile back - it will be cleared in the calling method
+                    board.placeTile(boardCopy[row][col], row, col);
+                }
+            }
+        }
     }
-    
+
     /**
-     * Check for matches and clear them (Placeholder!!)
+     * Apply gravity to make tiles fall down to fill empty spaces
      */
-    private void checkAndClearMatches() {
-        // Placeholder for match detection
+    private void applyGravity() {
+        // Process each column independently
+        for (int col = 0; col < board.getWidth(); col++) {
+            // Start from the bottom and move upward
+            int emptyRow = -1;
+            
+            for (int row = board.getHeight() - 1; row >= 0; row--) {
+                if (board.isEmpty(row, col) && emptyRow == -1) {
+                    // Found an empty cell
+                    emptyRow = row;
+                } else if (!board.isEmpty(row, col) && emptyRow != -1) {
+                    // Found a tile that needs to fall
+                    board.placeTile(board.getTile(row, col), emptyRow, col);
+                    board.placeTile(null, row, col);
+                    
+                    // Look for the next empty cell starting from the current one
+                    emptyRow--;
+                }
+            }
+        }
+        
+        // Recalculate column heights
+        recalculateColumnHeights();
+        
+        // Show the updated board
+        drawBoard();
+        System.out.println("Tiles have fallen to fill gaps.");
+        
+        // Pause briefly to show the movement
+        try {
+            TimeUnit.MILLISECONDS.sleep(675);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
+
+    /**
+     * Recalculate the height of each column
+     */
+    private void recalculateColumnHeights() {
+        for (int col = 0; col < board.getWidth(); col++) {
+            columnHeights[col] = 0;
+            for (int row = 0; row < board.getHeight(); row++) {
+                if (!board.isEmpty(row, col)) {
+                    columnHeights[col]++;
+                }
+            }
+        }
+    }
+
     
     /**
      * Draw the board in the terminal

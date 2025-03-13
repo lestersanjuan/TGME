@@ -19,7 +19,7 @@ public class TileFactory {
      * @return a new ITile with a random color
      */
     public ITile createTile() {
-        Tile tile = new Tile();
+        Tile tile = new Tile("");
         String randomColor = COLORS[random.nextInt(COLORS.length)];
         tile.SetValue(randomColor);
         return tile;
@@ -31,7 +31,7 @@ public class TileFactory {
      * @return a new ITile with the specified color
     */
     public ITile createTile(String color) {
-        Tile tile = new Tile();
+        Tile tile = new Tile("");
         tile.SetValue(color);
         return tile;
     }
