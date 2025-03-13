@@ -19,34 +19,29 @@ public class TwentyFortyEightBoard extends Board {
      */
 
     public TwentyFortyEightBoard() {
-        System.out.println("test");
-        Random random = new Random();
-        Integer randomHeight = random.nextInt(4);
-        Integer randomWidth = random.nextInt(4);
-        Integer randomStart = random.nextInt(1, 2) * 2; // multiply by 2 to keep it a multiple of 2
-        this.currentBoard = new ArrayList<>(HEIGHT);
+        super(4, 4); // Call the parent constructor to set up width and height
+
+        // Initialize currentBoard as a 2D list of Tile objects
+        this.currentBoard = new ArrayList<>();
         for (int i = 0; i < HEIGHT; i++) {
-            List<Tile> current = new ArrayList<Tile>(WIDTH);
+            List<List<Tile>> row = new ArrayList<>();
             for (int j = 0; j < WIDTH; j++) {
+                List<Tile> tileCell = new ArrayList<>();
                 Tile newTile = new Tile();
                 newTile.SetValue("0");
-                current.add(newTile);
+                tileCell.add(newTile);
+                row.add(tileCell);
             }
-            currentBoard.add(current);
+            this.currentBoard.add(row);
         }
-        System.out.println("????/");
-        Tile newTile = new Tile();
-        newTile.SetValue(randomStart.toString());
-        // Place First Tile
-        this.PlaceTile(newTile, randomHeight, randomWidth);
-        // Check If there is tile
+        addRandomTile();
     }
 
     // Prints out current board
-    public List<List<Tile>> getBoard() {
+    public List<List<List<Tile>>> getBoard() {
         for (int i = 0; i < HEIGHT; i++) {
             for (int j = 0; j < WIDTH; j++) {
-                System.out.print(this.currentBoard.get(i).get(j).GetValue() + " ");
+                System.out.print(this.currentBoard.get(i).get(j).get(0).GetValue() + " ");
             }
             System.out.println(" ");
         }
@@ -54,23 +49,20 @@ public class TwentyFortyEightBoard extends Board {
     }
 
     public void addRandomTile() {
-        // TODO: can be called for whenever an action is done, should be checking if a
-        // tile
-        // currently has a value or number on it. IDK the algo for it but if it does
-        // have
-        // a value just keep calling random Indexes
-        boolean test = true;
-        while (test) {
+        Integer TWELVE_TRIES = 0;
+        while (TWELVE_TRIES <= 12) {
+            TWELVE_TRIES++;
             Random random = new Random();
-            Integer randomHeight = random.nextInt(4);
-            Integer randomWidth = random.nextInt(4);
-            Integer randomStart = random.nextInt(1, 2) * 2;
-            System.out.println(this.currentBoard.get(randomHeight).get(randomWidth).GetValue());
-            if (this.currentBoard.get(randomHeight).get(randomWidth).GetValue().equals("0")) {
-                System.out.println("testing");
+            int randomHeight = random.nextInt(HEIGHT);
+            int randomWidth = random.nextInt(WIDTH);
+            int randomStart = (random.nextInt(2) + 1) * 2; // 2 or 4
+
+            Tile currentTile = this.currentBoard.get(randomHeight).get(randomWidth).get(0);
+
+            if (currentTile.GetValue().equals("0")) { // ✅ Only place on empty spaces
                 Tile newTile = new Tile();
-                newTile.SetValue(randomStart.toString());
-                this.PlaceTile(newTile, 3, 2);
+                newTile.SetValue(Integer.toString(randomStart));
+                this.PlaceTile(newTile, randomHeight, randomWidth);
                 break;
             }
         }
