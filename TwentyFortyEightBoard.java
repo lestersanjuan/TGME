@@ -38,14 +38,13 @@ public class TwentyFortyEightBoard extends Board {
     }
 
     // Prints out current board
-    public List<List<List<Tile>>> getBoard() {
+    public void getBoard() {
         for (int i = 0; i < HEIGHT; i++) { // col
             for (int j = 0; j < WIDTH; j++) { // row
                 System.out.print(this.currentBoard.get(i).get(j).get(0).GetValue() + " ");
             }
             System.out.println(" ");
         }
-        return this.currentBoard;
     }
 
     public void addRandomTile() {
