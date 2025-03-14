@@ -29,6 +29,17 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                         emptyTile.SetValue("0");
                         if (tempTile.GetValue().equals("0")){
                             TFEGameBoard.PlaceTile(currTile, row, index);
+                            if (index != 0){
+                                Tile dummyTile = TFEGameBoard.currentBoard.get(row).get(index - 1).get(0);
+                                if ((dummyTile.GetValue().equals(currTile.GetValue()))){
+                                    System.out.println("????");
+                                    dummyTile.SetValue(String.valueOf(Integer.parseInt(currTile.GetValue()) * 2));
+                                    TFEGameBoard.PlaceTile(dummyTile, row, index - 1);
+                                    TFEGameBoard.PlaceTile(emptyTile, row, index);
+                                    TFEGameBoard.PlaceTile(emptyTile, row, col);
+                                    break;
+                                }
+                            }
                             TFEGameBoard.PlaceTile(emptyTile, row, col);
                             break;
                         }
