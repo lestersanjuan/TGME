@@ -68,11 +68,6 @@ public class TwentyFortyEightBoard extends Board {
         }
     }
 
-    public void isGameOver() {
-        // TODO: called after every move, will check if there are any more moves that
-        // can be done
-        // If not call isGameOver in every iteration. If it returns true then it is Game
-        // Over
-    }
+You’re making changes in a project you don’t have write access to. Submitting a change will write it to a new branch in your fork sbochato/TGME, so you can send a pull request.
 
 }
