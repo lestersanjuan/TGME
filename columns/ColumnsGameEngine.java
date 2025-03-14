@@ -10,6 +10,9 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
     private TileFactory tileFactory;
     private boolean gameRunning;
     private static final int INVISIBLE_HEIGHT = 16; // Invisible height limit
+    private int score = 0;
+    private final int BASE_SCORE = 150;
+    private final int MATCH_BONUS = 75; // For every match greater than 3, each bonus tile will receive an extra 75 points
     
     // Track the height of each column separately from the visible board
     private int[] columnHeights;
@@ -44,7 +47,7 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         if (!pieceDropped) {
             gameRunning = false;
             drawBoard(); // Final board state
-            System.out.println("Game Over! A column has exceeded the height limit.");
+            System.out.println("Game Over! A column has exceeded the height limit. Final Score: " + score);
             return false;
         }
     
@@ -151,7 +154,6 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             }
             
             // Get user input
-            System.out.println("Move (a/j=left, d/l=right, s=rotate down, enter=down): ");
             String input = scanner.nextLine().trim().toLowerCase();
             
             if (input.equals("a") || input.equals("j")) { // 'a' or 'j' for left
@@ -324,6 +326,25 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         }
         return -1;
     }
+
+    /**
+     * Calculate the score based on the number of tiles cleared
+     * @param tilesCleared The number of tiles cleared
+     * @return The calculated score
+     */
+    private int calculateScore(int tilesCleared) {
+        if (tilesCleared < 3) return 0;
+        
+        // Base score for 3 tiles
+        int calculatedScore = BASE_SCORE;
+        
+        // Bonus for additional tiles
+        if (tilesCleared > 3) {
+            calculatedScore += (tilesCleared - 3) * MATCH_BONUS;
+        }
+        
+        return calculatedScore;
+    }
     
     /**
      * Check for matches and clear them
@@ -402,8 +423,25 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         
         // If matches were found, clear the tiles and move others down
         if (matchesFound) {
+            // Count total tiles to clear for scoring
+            int totalTilesCleared = 0;
+            for (int row = 0; row < board.getHeight(); row++) {
+                for (int col = 0; col < board.getWidth(); col++) {
+                    if (tilesToClear[row][col]) {
+                        totalTilesCleared++;
+                    }
+                }
+            }
+            
+            // Calculate score
+            int matchScore = calculateScore(totalTilesCleared);
+            score += matchScore;
+            
             // Display the matches before clearing
             replaceMatches(tilesToClear);
+            
+            // Show score earned
+            System.out.println("Cleared " + totalTilesCleared + " tiles! +" + matchScore + " points!");
             
             // Clear matched tiles
             for (int col = 0; col < board.getWidth(); col++) {
@@ -567,6 +605,10 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         System.out.println("Columns Game");
         System.out.println("------------");
         
+        // Draw the score at the top
+        System.out.println("Score: " + score);
+        System.out.println();
+        
         // Draw the board
         for (int row = 0; row < board.getHeight(); row++) {
             System.out.print("|");
@@ -578,7 +620,26 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
                     System.out.print(tile.GetValue());
                 }
             }
-            System.out.println("|");
+            
+            // Add score and other info on the side of the board
+            if (row == 2) {
+                System.out.println("|   Score: " + score);
+            } else if (row == 3) {
+                System.out.println("|   -----");
+            } else if (row == 5) {
+                System.out.println("|   Controls:");
+            } else if (row == 6) {
+                System.out.println("|   a - left");
+            } else if (row == 7) {
+                System.out.println("|   d - right");
+            } else if (row == 8) {
+                System.out.println("|   s - rotate");
+            }
+            else if (row == 9) {
+                System.out.println("|   Enter - drop");
+            } else {
+                System.out.println("|");
+            }
         }
         
         // Draw the bottom border
@@ -587,16 +648,13 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             System.out.print("-");
         }
         System.out.println("+");
-        
-        // Debug info - show column heights (optional)
-        // System.out.println("Column heights: " + Arrays.toString(columnHeights));
     }
     
     /**
      * Clear the terminal screen
      */
     private void clearScreen() {
-        System.out.print("\033[H\033[2J");
+        System.out.print("\033[2J\033[1;1H");
         System.out.flush();
     }
 }
