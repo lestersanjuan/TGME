@@ -13,7 +13,7 @@ public class main {
         man.TFEGameBoard.addRandomTile();
 
         System.out.println(man.TFEGameBoard.getBoard());
-        man.left();
+        man.up();
         System.out.println(man.TFEGameBoard.getBoard());
     }
 }
