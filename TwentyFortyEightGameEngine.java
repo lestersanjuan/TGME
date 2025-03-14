@@ -1,4 +1,5 @@
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class TwentyFortyEightGameEngine extends GameEngine {
     //protected Board gameBoard; Used the TFEBoard
@@ -16,47 +17,37 @@ public class TwentyFortyEightGameEngine extends GameEngine {
     //   [[0],[0],[0],[0]],
     //   [[0],[0],[0],[0]],
     //   [[0],[0],[0],[0]] ]
-    public void left(){
-        //check every row move left
-        boolean foundOne = false;
-        for (int row = 0; row < HEIGHT; row++){
-            for (int col = 0; col < WIDTH; col++){
-                Tile currTile = TFEGameBoard.currentBoard.get(row).get(col).get(0);
-                if (!currTile.GetValue().equals("0")){ //Basically move the tile left till it collides
-                    for (int index = 0; index < col; index++){// at col
-                        Tile tempTile = TFEGameBoard.currentBoard.get(row).get(index).get(0);
-                        Tile emptyTile = new Tile();
-                        emptyTile.SetValue("0");
-                        if (index != 0){
-                            Tile dummyTile = TFEGameBoard.currentBoard.get(row).get(index - 1).get(0);
-                            if ((dummyTile.GetValue().equals(currTile.GetValue()))){
-                                System.out.println("????");
-                                dummyTile.SetValue(String.valueOf(Integer.parseInt(currTile.GetValue()) * 2));
-                                TFEGameBoard.PlaceTile(dummyTile, row, index - 1);
-                                TFEGameBoard.PlaceTile(emptyTile, row, index);
-                                TFEGameBoard.PlaceTile(emptyTile, row, col);
-                                break;
-                            }
-                        }
-                        if (tempTile.GetValue().equals("0")){
-                            TFEGameBoard.PlaceTile(currTile, row, index);
-                            if (index != 0){
-                                Tile dummyTile = TFEGameBoard.currentBoard.get(row).get(index - 1).get(0);
-                                if ((dummyTile.GetValue().equals(currTile.GetValue()))){
-                                    System.out.println("????");
-                                    dummyTile.SetValue(String.valueOf(Integer.parseInt(currTile.GetValue()) * 2));
-                                    TFEGameBoard.PlaceTile(dummyTile, row, index - 1);
-                                    TFEGameBoard.PlaceTile(emptyTile, row, index);
-                                    TFEGameBoard.PlaceTile(emptyTile, row, col);
-                                    break;
-                                }
-                            }
-                            TFEGameBoard.PlaceTile(emptyTile, row, col);
-                            break;
-                        }
+    public void left() {
+    // For each row in the board
+        for (int row = 0; row < HEIGHT; row++) {
 
-                    }
+            // 1) Collect non-zero tile values in a temporary list.
+            List<Integer> rowValues = new ArrayList<>();
+            for (int col = 0; col < WIDTH; col++) {
+                Tile currentTile = TFEGameBoard.currentBoard.get(row).get(col).get(0);
+                int val = Integer.parseInt(currentTile.GetValue());
+                if (val != 0) {
+                    rowValues.add(val);
                 }
+            }
+
+            // 2) Merge adjacent duplicates from left to right.
+            for (int i = 0; i < rowValues.size() - 1; i++) {
+                if (rowValues.get(i).equals(rowValues.get(i + 1))) {
+                    rowValues.set(i, rowValues.get(i) * 2);  // double the left tile
+                    rowValues.remove(i + 1);                // remove the merged tile
+                    // Skip checking the next index after a merge
+                    // so you don't merge the newly formed tile again in this move
+                }
+            }
+
+            // 3) Place the merged values back into the row (left aligned),
+            //    filling any leftover spots with 0.
+            for (int col = 0; col < WIDTH; col++) {
+                int newVal = (col < rowValues.size()) ? rowValues.get(col) : 0;
+                Tile newTile = new Tile();
+                newTile.SetValue(String.valueOf(newVal));
+                TFEGameBoard.PlaceTile(newTile, row, col);
             }
         }
     }

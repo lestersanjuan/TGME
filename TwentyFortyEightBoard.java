@@ -68,6 +68,4 @@ public class TwentyFortyEightBoard extends Board {
         }
     }
 
-You’re making changes in a project you don’t have write access to. Submitting a change will write it to a new branch in your fork sbochato/TGME, so you can send a pull request.
-
 }
