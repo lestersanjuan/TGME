@@ -332,13 +332,15 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         boolean matchesFound = false;
         boolean[][] tilesToClear = new boolean[board.getHeight()][board.getWidth()];
         
-        // Check for horizontal matches
+        // Check for horizontal matches (3 or more in a row)
         for (int row = 0; row < board.getHeight(); row++) {
             for (int col = 0; col < board.getWidth() - 2; col++) {
                 ITile tile = board.getTile(row, col);
                 if (tile != null) {
-                    if (checkMatch(row, col, 0, 1, 3)) {
-                        for (int i = 0; i < 3; i++) {
+                    // Find the maximum length of the match
+                    int matchLength = findMaxMatchLength(row, col, 0, 1);
+                    if (matchLength >= 3) {
+                        for (int i = 0; i < matchLength; i++) {
                             tilesToClear[row][col + i] = true;
                         }
                         matchesFound = true;
@@ -347,13 +349,15 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             }
         }
         
-        // Check for vertical matches
+        // Check for vertical matches (3 or more in a column)
         for (int row = 0; row < board.getHeight() - 2; row++) {
             for (int col = 0; col < board.getWidth(); col++) {
                 ITile tile = board.getTile(row, col);
                 if (tile != null) {
-                    if (checkMatch(row, col, 1, 0, 3)) {
-                        for (int i = 0; i < 3; i++) {
+                    // Find the maximum length of the match
+                    int matchLength = findMaxMatchLength(row, col, 1, 0);
+                    if (matchLength >= 3) {
+                        for (int i = 0; i < matchLength; i++) {
                             tilesToClear[row + i][col] = true;
                         }
                         matchesFound = true;
@@ -367,8 +371,10 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             for (int col = 0; col < board.getWidth() - 2; col++) {
                 ITile tile = board.getTile(row, col);
                 if (tile != null) {
-                    if (checkMatch(row, col, 1, 1, 3)) {
-                        for (int i = 0; i < 3; i++) {
+                    // Find the maximum length of the match
+                    int matchLength = findMaxMatchLength(row, col, 1, 1);
+                    if (matchLength >= 3) {
+                        for (int i = 0; i < matchLength; i++) {
                             tilesToClear[row + i][col + i] = true;
                         }
                         matchesFound = true;
@@ -382,8 +388,10 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             for (int col = 2; col < board.getWidth(); col++) {
                 ITile tile = board.getTile(row, col);
                 if (tile != null) {
-                    if (checkMatch(row, col, 1, -1, 3)) {
-                        for (int i = 0; i < 3; i++) {
+                    // Find the maximum length of the match
+                    int matchLength = findMaxMatchLength(row, col, 1, -1);
+                    if (matchLength >= 3) {
+                        for (int i = 0; i < matchLength; i++) {
                             tilesToClear[row + i][col - i] = true;
                         }
                         matchesFound = true;
@@ -419,30 +427,41 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             MatchTiles();
         }
     }
-
+    
     /**
-     * Check if there is a match of n tiles starting from (row,col) and moving in the direction (rowDir,colDir)
+     * Find the maximum length of a match starting from (row,col) and moving in the direction (rowDir,colDir)
+     * @param row Starting row
+     * @param col Starting column
+     * @param rowDir Row direction (0 for horizontal, 1 for vertical or diagonal)
+     * @param colDir Column direction (0 for vertical, 1 for right diagonal, -1 for left diagonal)
+     * @return The maximum length of the match (1 if no match)
      */
-    private boolean checkMatch(int row, int col, int rowDir, int colDir, int n) {
+    private int findMaxMatchLength(int row, int col, int rowDir, int colDir) {
         ITile firstTile = board.getTile(row, col);
-        if (firstTile == null) return false;
+        if (firstTile == null) return 0;
         
-        for (int i = 1; i < n; i++) {
-            int newRow = row + i * rowDir;
-            int newCol = col + i * colDir;
+        int maxLength = 1;
+        String value = firstTile.GetValue();
+        
+        // Keep checking tiles in the specified direction until we find one that doesn't match
+        while (true) {
+            int newRow = row + maxLength * rowDir;
+            int newCol = col + maxLength * colDir;
             
             // Check bounds
             if (newRow < 0 || newRow >= board.getHeight() || newCol < 0 || newCol >= board.getWidth()) {
-                return false;
+                break;
             }
             
             ITile nextTile = board.getTile(newRow, newCol);
-            if (nextTile == null || !nextTile.GetValue().equals(firstTile.GetValue())) {
-                return false;
+            if (nextTile == null || !nextTile.GetValue().equals(value)) {
+                break;
             }
+            
+            maxLength++;
         }
         
-        return true;
+        return maxLength;
     }
 
     /**
