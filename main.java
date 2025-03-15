@@ -79,7 +79,11 @@ public class main {
         game.TFEGameBoard.addRandomTile();
         
         while (true) {
-            game.TFEGameBoard.getBoard();
+            String oldBoard = game.TFEGameBoard.getBoard();
+            if (game.TFEGameBoard.isGameOver()){
+                System.out.println("u suck");
+                break;
+            }
             System.out.println("Current score: " + game.getScore());
             System.out.print("Enter move (up/down/left/right/quit): ");
             
@@ -91,6 +95,12 @@ public class main {
             if (!game.Action(command)) {
                 System.out.println("Invalid move!");
                 continue;
+            }
+            if (!oldBoard.equals(game.TFEGameBoard.getBoard())){
+                game.TFEGameBoard.addRandomTile();
+            }
+            else{
+                System.out.println("Can Not Do Move");
             }
         }
     }

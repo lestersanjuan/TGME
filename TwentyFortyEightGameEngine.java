@@ -58,7 +58,6 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 TFEGameBoard.PlaceTile(newTile, row, col);
             }
         }
-        TFEGameBoard.addRandomTile();
     }
     // [ [[0],[0],[0],[0]],
     //   [[0],[0],[0],[0]],
@@ -100,7 +99,6 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 reversedCol--;
             }
         }
-        TFEGameBoard.addRandomTile();
     }
 
     public void up() {
@@ -138,7 +136,6 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 writeRow++;
             }
         }
-        TFEGameBoard.addRandomTile();
     }
     
 
@@ -181,7 +178,6 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 writeRow--;
             }
         }
-        TFEGameBoard.addRandomTile();
     }
     
 

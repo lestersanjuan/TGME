@@ -38,13 +38,16 @@ public class TwentyFortyEightBoard extends Board {
     }
 
     // Prints out current board
-    public void getBoard() {
+    public String getBoard() {
+        String printingString = "";
         for (int i = 0; i < HEIGHT; i++) { // col
             for (int j = 0; j < WIDTH; j++) { // row
-                System.out.print(this.currentBoard.get(i).get(j).get(0).GetValue() + " ");
+                printingString = printingString + this.currentBoard.get(i).get(j).get(0).GetValue() + " ";
             }
-            System.out.println(" ");
+            printingString += "\n";
         }
+        System.out.println(printingString);
+        return printingString;
     }
 
     public void addRandomTile() {
@@ -66,5 +69,51 @@ public class TwentyFortyEightBoard extends Board {
             }
         }
     }
+
+    public boolean isGameOver() {
+        int size = 4;
+    
+        // 1) Check for any empty (0) tile
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                Tile tile = this.currentBoard.get(row).get(col).get(0);
+                int value = Integer.parseInt(tile.GetValue());
+                if (value == 0) {
+                    return false;  // Found an empty space, so not game over
+                }
+            }
+        }
+    
+        // 2) Check for possible merges
+        //    (If any two adjacent tiles match, we can still make a move)
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                Tile currentTile = this.currentBoard.get(row).get(col).get(0);
+                int currentValue = Integer.parseInt(currentTile.GetValue());
+    
+                // Check right neighbor if exists
+                if (col + 1 < size) {
+                    Tile rightTile = this.currentBoard.get(row).get(col + 1).get(0);
+                    int rightValue = Integer.parseInt(rightTile.GetValue());
+                    if (currentValue == rightValue) {
+                        return false;  // Merge possible with right neighbor
+                    }
+                }
+    
+                // Check down neighbor if exists
+                if (row + 1 < size) {
+                    Tile downTile = this.currentBoard.get(row + 1).get(col).get(0);
+                    int downValue = Integer.parseInt(downTile.GetValue());
+                    if (currentValue == downValue) {
+                        return false;  // Merge possible with down neighbor
+                    }
+                }
+            }
+        }
+    
+        // If we reach here, no empty spaces and no merges => game over
+        return true;
+    }
+    
 
 }
