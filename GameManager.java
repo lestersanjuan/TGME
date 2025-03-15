@@ -15,21 +15,20 @@ public abstract class GameManager {
 		Lose,
 	}
 
-	
-	private GameState status;
-	private Result result;
-	private GameEngine currentGameEngine;
-	private Map<Integer, User> users;
-	private IInputHandler inputHandler;
-	private Map<Integer, GameEngine> games;
-	private Map<Integer, Map<Integer, Integer>> leaderboard; //GameId: UserId:Score
+	protected GameState status;
+	protected Result result;
+	protected GameEngine currentGameEngine;
+	protected Map<Integer, User> users;
+	protected IInputHandler inputHandler;
+	protected Map<Integer, GameEngine> games;
+	protected Map<Integer, Map<Integer, Integer>> leaderboard; //GameId: UserId:Score
 
-	
 	public GameManager() {
 		this.status = GameState.NotStarted;
 		this.result = Result.Unset;
 		this.users = new HashMap<Integer, User>();
-		// Set Games here after creating the game engine
+		this.games = new HashMap<Integer, GameEngine>();
+		this.leaderboard = new HashMap<Integer, Map<Integer, Integer>>();
 	}
 	
 	abstract void AddUser(String name, Integer id, List<String> data);

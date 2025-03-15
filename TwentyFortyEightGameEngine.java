@@ -9,9 +9,20 @@ public class TwentyFortyEightGameEngine extends GameEngine {
     private final Integer HEIGHT = 4;
 	protected Integer gameId;
 	protected Integer score;
-    TwentyFortyEightGameEngine(){
-        //IDK? idt it needs to initialzie anything yet
+    protected User currentPlayer;
+
+    TwentyFortyEightGameEngine(Integer gameId, User player){
+        this.score = 0;
+        this.gameId = gameId;
+        this.currentPlayer = player;
     }
+
+    // Default constructor for backward compatibility
+    TwentyFortyEightGameEngine(){
+        this.score = 0;
+        this.gameId = 0;
+    }
+
     //List<List<List<Tile>>>                                     v WILL ALWAYS BE 0 FOR THIS CASE
     //TFEFGameBoard to access TFEGameBoard.get(col).get(row).get(0)
     // [ [[0],[0],[0],[0]],
@@ -19,7 +30,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
     //   [[0],[0],[0],[0]],
     //   [[0],[0],[0],[0]] ]
     public void left() {
-    // For each row in the board
+        // For each row in the board
         for (int row = 0; row < HEIGHT; row++) {
             // 1) Collect non-zero tile values in a temporary list.
             List<Integer> rowValues = new ArrayList<>();
@@ -34,8 +45,10 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // 2) Merge adjacent duplicates from left to right.
             for (int i = 0; i < rowValues.size() - 1; i++) {
                 if (rowValues.get(i).equals(rowValues.get(i + 1))) {
-                    rowValues.set(i, rowValues.get(i) * 2);  // double the left tile
+                    int mergedValue = rowValues.get(i) * 2;
+                    rowValues.set(i, mergedValue);  // double the left tile
                     rowValues.remove(i + 1);
+                    this.score += mergedValue; // Add to score when tiles merge
                 }
             }
             for (int col = 0; col < WIDTH; col++) {
@@ -45,6 +58,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 TFEGameBoard.PlaceTile(newTile, row, col);
             }
         }
+        TFEGameBoard.addRandomTile();
     }
     // [ [[0],[0],[0],[0]],
     //   [[0],[0],[0],[0]],
@@ -66,8 +80,10 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // 2) Merge adjacent duplicates from left to right.
             for (int i = 0; i < rowValues.size() - 1; i++) {
                 if (rowValues.get(i).equals(rowValues.get(i + 1))) {
-                    rowValues.set(i, rowValues.get(i) * 2);  // double the left tile
+                    int mergedValue = rowValues.get(i) * 2;
+                    rowValues.set(i, mergedValue);  // double the left tile
                     rowValues.remove(i + 1);
+                    this.score += mergedValue; // Add to score when tiles merge
                 }
             }
             Integer reversedCol = WIDTH - 1;
@@ -84,6 +100,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 reversedCol--;
             }
         }
+        TFEGameBoard.addRandomTile();
     }
 
     public void up() {
@@ -99,9 +116,10 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             }
             for (int i = 0; i < colValues.size() - 1; i++) {
                 if (colValues.get(i).equals(colValues.get(i + 1))) {
-                    colValues.set(i, colValues.get(i) * 2);  // double the top tile
-                    colValues.remove(i + 1);                 // remove the merged tile
-                    // Skip checking the next index after a merge
+                    int mergedValue = colValues.get(i) * 2;
+                    colValues.set(i, mergedValue);  // double the top tile
+                    colValues.remove(i + 1);        // remove the merged tile
+                    this.score += mergedValue; // Add to score when tiles merge
                 }
             }
             int writeRow = 0;
@@ -120,6 +138,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 writeRow++;
             }
         }
+        TFEGameBoard.addRandomTile();
     }
     
 
@@ -140,9 +159,10 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // 3) Merge adjacent duplicates (now left to right in the reversed list).
             for (int i = 0; i < colValues.size() - 1; i++) {
                 if (colValues.get(i).equals(colValues.get(i + 1))) {
-                    colValues.set(i, colValues.get(i) * 2);
+                    int mergedValue = colValues.get(i) * 2;
+                    colValues.set(i, mergedValue);
                     colValues.remove(i + 1);
-                    // Skip next index after merge
+                    this.score += mergedValue; // Add to score when tiles merge
                 }
             }
     
@@ -161,6 +181,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
                 writeRow--;
             }
         }
+        TFEGameBoard.addRandomTile();
     }
     
 
@@ -176,13 +197,48 @@ public class TwentyFortyEightGameEngine extends GameEngine {
     }
     @Override
     boolean Action(String command) {
-        // TODO Auto-generated method stub
-        System.out.println("mneow");
-        return false;
+        switch (command.toLowerCase()) {
+            case "left":
+                left();
+                return true;
+            case "right":
+                right();
+                return true;
+            case "up":
+                up();
+                return true;
+            case "down":
+                down();
+                return true;
+            default:
+                return false;
+        }
     }
     @Override
     void MatchTiles() {
         // TODO Auto-generated method stub
         System.out.println("mneow");
+    }
+
+    // Get current score
+    public int getScore() {
+        return this.score;
+    }
+
+    // End game and update score
+    public void endGame() {
+        if (this.currentPlayer != null) {
+            this.currentPlayer.SetScore("2048", String.valueOf(this.score));
+        }
+    }
+
+    // Get current player
+    public User getCurrentPlayer() {
+        return this.currentPlayer;
+    }
+
+    // Set current player
+    public void setCurrentPlayer(User player) {
+        this.currentPlayer = player;
     }
 }
