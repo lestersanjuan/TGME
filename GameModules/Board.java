@@ -29,8 +29,16 @@ public class Board {
 		return tileRemoved;
 	}
 	
-	public Spot GetTile(Integer row, Integer col) {
+	public Spot GetSpot(Integer row, Integer col) {
 		return this.currentBoard.get(row).GetSpot(col);
+	}
+	
+	public ITile GetFirstTile(Integer row, Integer col) {
+		if (this.currentBoard.get(row).GetSpot(col).IsEmpty()) {
+			return null;
+		}
+		
+		return this.currentBoard.get(row).GetSpot(col).GetTiles().get(0);
 	}
 	
 	public Boolean IsInBounds(Integer row, Integer col) {
@@ -89,6 +97,14 @@ public class Board {
 		
 		public ITile PopTile() {
 			return this.tiles.remove(0);
+		}
+		
+		public ITile GetFirstTile() {
+			if (this.tiles.isEmpty()) {
+				return null;
+			}
+			
+			return this.tiles.get(0);
 		}
 	}
 }

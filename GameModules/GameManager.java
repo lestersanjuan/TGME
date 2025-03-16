@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import Games.ColumnsGameEngine;
+
 public class GameManager {
 	public enum GameState {
 		NotStarted,
@@ -30,12 +32,18 @@ public class GameManager {
 	public GameManager() {
 		this.status = GameState.NotStarted;
 		this.result = Result.Unset;
+		this.leaderboard = new HashMap<Integer, Map<Integer, Integer>>();
 		this.users = new HashMap<Integer, User>();
 		this.games = new HashMap<Integer, GameEngine>();
 		
-		this.currentGameEngine = new SampleGameEngine("Game1");
+		this.currentGameEngine = new ColumnsGameEngine();
 		this.games.put(1, currentGameEngine);
 		this.games.put(2, new SampleGameEngine("Game2"));
+		
+		for (Integer gameId : this.games.keySet()) {
+			HashMap<Integer, Integer> gameLeaderBoard = new HashMap<Integer, Integer>();
+			this.leaderboard.put(gameId, gameLeaderBoard);
+		}
 	}
 	
 	public void AddUser(String name, Integer id) {
@@ -89,4 +97,12 @@ public class GameManager {
 		return this.currentUser;
 	}
 	
+	public Boolean IsGameEnded() {
+		return ! this.currentGameEngine.IsGameRunning();
+	}
+	
+	public void SetScoresAfterGame() {
+		Map<Integer, Integer> gameLeaderboard = this.leaderboard.get(currentGameEngine.GetGameId());
+		gameLeaderboard.put(this.currentUser.GetUserId(), this.currentGameEngine.GetScore());
+	}
 }

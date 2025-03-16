@@ -5,6 +5,7 @@ public abstract class GameEngine {
 	protected Board gameBoard;
 	protected Integer gameId;
 	protected Integer score;
+	protected Boolean gameRunning;
 	
 	public abstract boolean Action(String command);
 	
@@ -21,4 +22,12 @@ public abstract class GameEngine {
 	}
 	
 	public abstract void MatchTiles();
+	
+	public Boolean IsGameRunning() {
+		return this.gameRunning;
+	}
+	
+	public Integer GetScore() {
+		return this.score;
+	}
 }
