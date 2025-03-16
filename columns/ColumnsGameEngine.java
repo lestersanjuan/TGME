@@ -63,7 +63,7 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
     
         System.out.println("Welcome to Columns!");
         System.out.println("Pieces will fall one block at a time.");
-        System.out.println("Controls: 'a' or j=left, 'd' or l=right, 's'=rotate down");
+        System.out.println("Controls: 'a'=left, 'd'=right, 's'=rotate down, 'Enter'=down");
         System.out.println("Press Enter to start the game (press Ctrl+C to quit)...");
         scanner.nextLine();
         
@@ -608,6 +608,7 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
         // Draw the score at the top
         System.out.println("Score: " + score);
         System.out.println();
+        System.out.println("--------");
         
         // Draw the board
         for (int row = 0; row < board.getHeight(); row++) {
@@ -625,7 +626,7 @@ public class ColumnsGameEngine extends GameEngine.GameEngine{
             if (row == 2) {
                 System.out.println("|   Score: " + score);
             } else if (row == 3) {
-                System.out.println("|   -----");
+                System.out.println("|   ------");
             } else if (row == 5) {
                 System.out.println("|   Controls:");
             } else if (row == 6) {
