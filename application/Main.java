@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import GameModules.GameEngine;
 import GameModules.GameManager;
+import GameModules.GameManager.GameLeaderBoard;
 import GameModules.User;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -167,10 +168,8 @@ public class Main extends Application implements EventHandler<ActionEvent>{
 	
 	private Scene CreateLeaderBoardScreen(Integer gameId) {
 		VBox leaderBoardBox = new VBox();
-		Map<Integer, Integer> leaderboard = this.gameManager.GetLeaderboard(gameId);
-		List<Entry<Integer, Integer>> userScorePairs = new ArrayList<Entry<Integer, Integer>>(leaderboard.entrySet());
-		userScorePairs.sort(Entry.comparingByValue());
-		Collections.reverse(userScorePairs);
+		GameLeaderBoard leaderboard = this.gameManager.GetLeaderboard(gameId);
+		List<Entry<Integer, Integer>> userScorePairs = leaderboard.GetSortedLeaderBoard();
 		
 		for (Entry<Integer, Integer> userScorePair : userScorePairs) {
 			User user = this.gameManager.GetUser(userScorePair.getKey());
