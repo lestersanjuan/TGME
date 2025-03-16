@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import Games.ColumnsGameEngine;
 
@@ -36,17 +37,24 @@ public class GameManager {
 		this.users = new HashMap<Integer, User>();
 		this.games = new HashMap<Integer, GameEngine>();
 		
-		this.currentGameEngine = new ColumnsGameEngine();
+		this.currentGameEngine = new ColumnsGameEngine(1);
 		this.games.put(1, currentGameEngine);
-		this.games.put(2, new SampleGameEngine("Game2"));
+		this.games.put(2, new SampleGameEngine("Game2", 2));
 		
 		for (Integer gameId : this.games.keySet()) {
-			HashMap<Integer, Integer> gameLeaderBoard = new HashMap<Integer, Integer>();
+			TreeMap<Integer, Integer> gameLeaderBoard = new TreeMap<Integer, Integer>();
+			for (Integer userId : this.users.keySet()) {
+				gameLeaderBoard.put(userId, 0); //Put default score variable
+			}
 			this.leaderboard.put(gameId, gameLeaderBoard);
 		}
 	}
 	
 	public void AddUser(String name, Integer id) {
+		for (Integer gameId : this.leaderboard.keySet()) {
+			Map<Integer, Integer> gameLeaderboard = this.leaderboard.get(gameId);
+			gameLeaderboard.put(id, 0);
+		}
 		this.users.put(id, new User(name, id));
 	}
 	
@@ -104,5 +112,13 @@ public class GameManager {
 	public void SetScoresAfterGame() {
 		Map<Integer, Integer> gameLeaderboard = this.leaderboard.get(currentGameEngine.GetGameId());
 		gameLeaderboard.put(this.currentUser.GetUserId(), this.currentGameEngine.GetScore());
+	}
+	
+	public Integer GetScore() {
+		return this.currentGameEngine.GetScore();
+	}
+	
+	public Map<Integer, Integer> GetLeaderboard(Integer gameId) {
+		return this.leaderboard.get(gameId);
 	}
 }

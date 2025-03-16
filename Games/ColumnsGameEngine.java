@@ -20,12 +20,10 @@ public class ColumnsGameEngine extends GameModules.GameEngine{
     /**
      * Constructor
      */
-    public ColumnsGameEngine() {
-		System.out.println("In columns");
-    	this.gameName = "Columns";
+    public ColumnsGameEngine(Integer id) {
+    	super("Columns", id);
         this.gameBoard = new Board(6, 13);
         this.tileFactory = new TileFactory();
-        this.gameRunning = true;
         this.columnHeights = new int[gameBoard.GetWidth()];
         
         for (int i = 0; i < columnHeights.length; i++) {

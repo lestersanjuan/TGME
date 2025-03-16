@@ -1,18 +1,16 @@
 package GameModules;
-import java.util.List;
 
 public class SampleGameEngine extends GameEngine{
 	
-	public SampleGameEngine(String name) {
-		this.gameRunning = true;
-		this.score = 0;
+	public SampleGameEngine(String name, Integer id) {
+		super(name, id);
 		this.gameBoard = new Board(4, 8);
-		this.gameName = name;
 	}
 	
 	@Override
 	public boolean Action(String command) {
 		System.out.println(command);
+		this.score ++;
 		this.gameRunning = false;
 		return command.equals("action");
 	}
