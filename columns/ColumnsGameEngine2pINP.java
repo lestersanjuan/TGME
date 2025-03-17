@@ -19,16 +19,26 @@ public class ColumnsGameEngine2pINP extends GameEngine.GameEngine {
     private boolean player2Lost = false;
     private int[] columnHeights1;
     private int[] columnHeights2;
-    private InputHandler inputHandler;
     
-    public ColumnsGameEngine2pINP(InputHandler inputHandler) {
+    // Game state variables
+    private List<ITile> currentPiece1;
+    private List<ITile> currentPiece2;
+    private int currentCol1;
+    private int currentCol2;
+    private int topRow1;
+    private int topRow2;
+    private boolean needNewPiece1 = true;
+    private boolean needNewPiece2 = true;
+    private boolean gameInitialized = false;
+    private int activePlayer = 1;
+    
+    public ColumnsGameEngine2pINP() {
         this.board1 = new ColumnsBoard();
         this.board2 = new ColumnsBoard();
         this.tileFactory = new TileFactory();
         this.gameRunning = true;
         this.columnHeights1 = new int[board1.getWidth()];
         this.columnHeights2 = new int[board2.getWidth()];
-        this.inputHandler = inputHandler;
         
         for (int i = 0; i < columnHeights1.length; i++) {
             columnHeights1[i] = 0;
@@ -38,350 +48,374 @@ public class ColumnsGameEngine2pINP extends GameEngine.GameEngine {
 
     @Override
     public void MatchTiles() {
-        checkAndClearMatches(board1, columnHeights1, 1); // Check matches for player 1
+        checkAndClearMatches(board1, columnHeights1, 1);
         if (twoPlayerMode) {
-            checkAndClearMatches(board2, columnHeights2, 2); // Check matches for player 2
+            checkAndClearMatches(board2, columnHeights2, 2);
         }
+    }
+
+    public void initializeGame(int mode) {
+        twoPlayerMode = (mode == 2);
+        gameRunning = true;
+        gameInitialized = true;
+        
+        // Initialize game state
+        initializeGameState();
+        
+        // Draw initial board
+        drawBoards();
+    }
+    
+    private void initializeGameState() {
+        // Reset scores and player status if needed
+        if (!gameRunning) {
+            score1 = 0;
+            score2 = 0;
+            player1Lost = false;
+            player2Lost = false;
+            
+            // Reset boards
+            for (int row = 0; row < board1.getHeight(); row++) {
+                for (int col = 0; col < board1.getWidth(); col++) {
+                    board1.placeTile(null, row, col);
+                    if (twoPlayerMode) {
+                        board2.placeTile(null, row, col);
+                    }
+                }
+            }
+            
+            // Reset column heights
+            for (int i = 0; i < columnHeights1.length; i++) {
+                columnHeights1[i] = 0;
+                columnHeights2[i] = 0;
+            }
+        }
+        
+        // Set up initial pieces
+        if (!player1Lost) {
+            currentPiece1 = tileFactory.createColumn();
+            currentCol1 = board1.getWidth() / 2;
+            topRow1 = -currentPiece1.size();
+            needNewPiece1 = false;
+        }
+        
+        if (twoPlayerMode && !player2Lost) {
+            currentPiece2 = tileFactory.createColumn();
+            currentCol2 = board2.getWidth() / 2;
+            topRow2 = -currentPiece2.size();
+            needNewPiece2 = false;
+        }
+        
+        // Set active player
+        activePlayer = 1;
     }
 
     @Override
     public boolean Action(String command) {
-        List<ITile> columnPiece1 = null;
-        List<ITile> columnPiece2 = null;
-        
-        if (!player1Lost) {
-            columnPiece1 = tileFactory.createColumn();
+        // If game is not initialized or already over, return
+        if (!gameInitialized || !gameRunning) {
+            return gameRunning;
         }
         
-        if (!player2Lost && twoPlayerMode) {
-            columnPiece2 = tileFactory.createColumn();
+        // Process the command for the active player
+        if (activePlayer == 1 && !player1Lost) {
+            handlePlayerCommand(command, 1);
+        } else if (activePlayer == 2 && !player2Lost) {
+            handlePlayerCommand(command, 2);
         }
         
-        int middleCol = board1.getWidth() / 2;
+        // Update game state after processing command
+        updateGameState();
         
-        if (twoPlayerMode) {
-            boolean result = handleTwoPlayerTurn(columnPiece1, columnPiece2, middleCol);
-            if (!result) {
-                gameRunning = false;
-                drawBoards();
-                determineWinner();
-                return false;
-            }
-            return true;
-        } else {
-            boolean pieceDropped = handleSinglePlayerTurn(columnPiece1, middleCol);
-            if (!pieceDropped) {
-                gameRunning = false;
-                drawBoards();
-                System.out.println("Game Over! A column has exceeded the height limit. Final Score: " + score1);
-                return false;
-            }
-            
-            checkAndClearMatches(board1, columnHeights1, 1);
-            return true;
-        }
+        return gameRunning;
     }
     
-    public void startGame() {
-        System.out.println("Welcome to Columns!");
-        System.out.println("Select game mode:");
-        System.out.println("1. Single Player");
-        System.out.println("2. Two Players");
+    private void handlePlayerCommand(String command, int playerNum) {
+        // Get the player-specific variables
+        ColumnsBoard board = (playerNum == 1) ? board1 : board2;
+        List<ITile> currentPiece = (playerNum == 1) ? currentPiece1 : currentPiece2;
+        int currentCol = (playerNum == 1) ? currentCol1 : currentCol2;
+        int topRow = (playerNum == 1) ? topRow1 : topRow2;
+        int pieceLength = currentPiece.size();
         
-        int choice = inputHandler.getIntChoice(1, 2);
+        // Clear the current piece from the board
+        clearPieceFromBoard(board, currentPiece, topRow, currentCol);
         
-        twoPlayerMode = (choice == 2);
-        
-        System.out.println("\nPieces will fall one block at a time.");
-        if (twoPlayerMode) {
-            System.out.println("Player 1 Controls: 'a' - left, 'd' - right, 's' - rotate, Enter - down");
-            System.out.println("Player 2 Controls: 'j' - left, 'l' - right, 'k' - rotate, Enter - down");
-        } else {
-            System.out.println("Controls: 'a'=left, 'd'=right, 's'=rotate, 'Enter'=down");
-        }
-        System.out.println("Press Enter to start the game (press Ctrl+C to quit)...");
-        inputHandler.waitForEnter();
-        
-        gameRunning = true;
-        
-        while (gameRunning) {
-            boolean success = Action("");
-            
-            if (!success) {
-                gameRunning = false;
-                System.out.println("Press Enter to exit...");
-                inputHandler.waitForEnter();
-                break;
+        // Process the command
+        if ((playerNum == 1 && command.equals("a")) || (playerNum == 2 && command.equals("j"))) {
+            // Move left
+            if (canMoveLeft(board, currentPiece, topRow, currentCol, pieceLength)) {
+                currentCol--;
             }
+        } else if ((playerNum == 1 && command.equals("d")) || (playerNum == 2 && command.equals("l"))) {
+            // Move right
+            if (canMoveRight(board, currentPiece, topRow, currentCol, pieceLength)) {
+                currentCol++;
+            }
+        } else if ((playerNum == 1 && command.equals("s")) || (playerNum == 2 && command.equals("k"))) {
+            // Rotate
+            rotatePiece(currentPiece);
+        } else {
+            // Move down (default action for any other input)
+            topRow++;
+        }
+        
+        // Update the player-specific variables
+        if (playerNum == 1) {
+            currentCol1 = currentCol;
+            topRow1 = topRow;
+        } else {
+            currentCol2 = currentCol;
+            topRow2 = topRow;
         }
     }
-    
-    private void determineWinner() {
-        if (!twoPlayerMode) {
-            System.out.println("Game Over! Final Score: " + score1);
-            return;
-        }
-        
-        System.out.println("\n=== GAME OVER ===");
-        if (score1 > score2) {
-            System.out.println("Player 1 wins with a higher score!");
-        } else if (score2 > score1) {
-            System.out.println("Player 2 wins with a higher score!");
-        } else {
-            System.out.println("It's a tie!");
-        }
-        
-        System.out.println("Player 1 Score: " + score1);
-        System.out.println("Player 2 Score: " + score2);
-    }
-    
-    private boolean handleTwoPlayerTurn(List<ITile> columnPiece1, List<ITile> columnPiece2, int startCol) {     
-        if (!player1Lost) {
-            System.out.println("\n--- PLAYER 1'S TURN ---");
-            boolean player1Success = handlePlayerTurn(board1, columnHeights1, columnPiece1, startCol, 1);
-            if (!player1Success) {
-                player1Lost = true;
-                System.out.println("Player 1 has lost! Player 2 can continue playing.");
-            } else {
-                checkAndClearMatches(board1, columnHeights1, 1);
-            }
-        }
 
-        if (!player2Lost) {
-            System.out.println("\n--- PLAYER 2'S TURN ---");
-            boolean player2Success = handlePlayerTurn(board2, columnHeights2, columnPiece2, startCol, 2);
-            if (!player2Success) {
+    private void updateGameState() {
+        // Update player 1's state if active
+        if (activePlayer == 1 && !player1Lost) {
+            updatePlayerState(1);
+        }
+        // Update player 2's state if active
+        else if (activePlayer == 2 && !player2Lost) {
+            updatePlayerState(2);
+        }
+        
+        // Switch active player if needed in two-player mode
+        if (twoPlayerMode) {
+            if (activePlayer == 1 && needNewPiece1) {
+                // Switch to player 2 if they haven't lost
+                if (!player2Lost) {
+                    activePlayer = 2;
+                }
+            } else if (activePlayer == 2 && needNewPiece2) {
+                // Switch to player 1 if they haven't lost
+                if (!player1Lost) {
+                    activePlayer = 1;
+                }
+            }
+        }
+        
+        // Check if the game is over - consistent logic for both modes
+        if ((twoPlayerMode && player1Lost && player2Lost) || 
+            (!twoPlayerMode && player1Lost)) {
+            gameRunning = false;
+            drawBoards();
+            determineWinner();
+            return; // Exit early since game is over
+        }
+        
+        // Create new pieces if needed
+        if (needNewPiece1 && !player1Lost) {
+            currentPiece1 = tileFactory.createColumn();
+            currentCol1 = board1.getWidth() / 2;
+            topRow1 = -currentPiece1.size();
+            
+            // Check if the starting column is already too high
+            if (columnHeights1[currentCol1] >= INVISIBLE_HEIGHT - currentPiece1.size()) {
+                player1Lost = true;
+                System.out.println("Player 1 has lost!");
+                
+                // Check if the game is over after this player lost
+                if (!twoPlayerMode || (twoPlayerMode && player2Lost)) {
+                    gameRunning = false;
+                    drawBoards();
+                    determineWinner();
+                    return;
+                }
+            } else {
+                needNewPiece1 = false;
+            }
+        }
+        
+        if (twoPlayerMode && needNewPiece2 && !player2Lost) {
+            currentPiece2 = tileFactory.createColumn();
+            currentCol2 = board2.getWidth() / 2;
+            topRow2 = -currentPiece2.size();
+            
+            // Check if the starting column is already too high
+            if (columnHeights2[currentCol2] >= INVISIBLE_HEIGHT - currentPiece2.size()) {
                 player2Lost = true;
                 System.out.println("Player 2 has lost!");
+                
+                // Check if the game is over after this player lost
+                if (player1Lost) {
+                    gameRunning = false;
+                    drawBoards();
+                    determineWinner();
+                    return;
+                }
             } else {
-                checkAndClearMatches(board2, columnHeights2, 2);
+                needNewPiece2 = false;
             }
         }
         
-        // If both players have lost, end the game
-        if (player1Lost && player2Lost) {
-            return false;
+        // Place the active pieces on the board and draw
+        if (!player1Lost) {
+            placePieceOnBoard(board1, currentPiece1, topRow1, currentCol1);
+        }
+        if (twoPlayerMode && !player2Lost) {
+            placePieceOnBoard(board2, currentPiece2, topRow2, currentCol2);
         }
         
-        return true;
+        drawBoards();
     }
-
-    private boolean handleSinglePlayerTurn(List<ITile> columnPiece, int startCol) {
-        return handlePlayerTurn(board1, columnHeights1, columnPiece, startCol, 1);
+    
+    private void updatePlayerState(int playerNum) {
+        ColumnsBoard board = (playerNum == 1) ? board1 : board2;
+        int[] columnHeights = (playerNum == 1) ? columnHeights1 : columnHeights2;
+        List<ITile> currentPiece = (playerNum == 1) ? currentPiece1 : currentPiece2;
+        int currentCol = (playerNum == 1) ? currentCol1 : currentCol2;
+        int topRow = (playerNum == 1) ? topRow1 : topRow2;
+        int pieceLength = currentPiece.size();
+        
+        // Check for collision for the next position below
+        if (isCollision(board, topRow + 1, currentCol, pieceLength)) {
+            placePieceOnBoard(board, currentPiece, topRow, currentCol);
+            
+            // Update column height
+            int newHeight = 0;
+            for (int row = 0; row < board.getHeight(); row++) {
+                if (!board.isEmpty(row, currentCol)) {
+                    newHeight++;
+                }
+            }
+            columnHeights[currentCol] = newHeight;
+            
+            // Check if the game is over for this player
+            if (columnHeights[currentCol] >= INVISIBLE_HEIGHT) {
+                if (playerNum == 1) {
+                    player1Lost = true;
+                    System.out.println("Player 1 has lost!");
+                    
+                    // If single player or both players lost, end the game
+                    if (!twoPlayerMode || player2Lost) {
+                        gameRunning = false;
+                    }
+                } else {
+                    player2Lost = true;
+                    System.out.println("Player 2 has lost!");
+                    
+                    // If both players lost, end the game
+                    if (player1Lost) {
+                        gameRunning = false;
+                    }
+                }
+            } else {
+                checkAndClearMatches(board, columnHeights, playerNum);
+            }
+            
+            // Need a new piece for next turn
+            if (playerNum == 1) {
+                needNewPiece1 = true;
+            } else {
+                needNewPiece2 = true;
+            }
+        }
     }
-
-    private void rotatePiece(ColumnsBoard board, List<ITile> columnPiece, int topRow, int currentCol, int pieceLength) {
-        // Clear the current position
-        for (int i = 0; i < pieceLength; i++) {
+    
+    private void clearPieceFromBoard(ColumnsBoard board, List<ITile> piece, int topRow, int currentCol) {
+        for (int i = 0; i < piece.size(); i++) {
             int row = topRow + i;
             if (row >= 0 && row < board.getHeight()) {
                 board.placeTile(null, row, currentCol);
             }
         }
-        
+    }
+    
+    private void placePieceOnBoard(ColumnsBoard board, List<ITile> piece, int topRow, int currentCol) {
+        for (int i = 0; i < piece.size(); i++) {
+            int row = topRow + i;
+            if (row >= 0 && row < board.getHeight()) {
+                board.placeTile(piece.get(i), row, currentCol);
+            }
+        }
+    }
+    
+    private boolean canMoveLeft(ColumnsBoard board, List<ITile> piece, int topRow, int currentCol, int pieceLength) {
+        if (currentCol <= 0) return false;
+        return !isCollision(board, topRow, currentCol - 1, pieceLength);
+    }
+    
+    private boolean canMoveRight(ColumnsBoard board, List<ITile> piece, int topRow, int currentCol, int pieceLength) {
+        if (currentCol >= board.getWidth() - 1) return false;
+        return !isCollision(board, topRow, currentCol + 1, pieceLength);
+    }
+    
+    private void rotatePiece(List<ITile> columnPiece) {
         // Perform the rotation: bottom -> top, middle -> bottom, top -> middle
-        ITile temp = columnPiece.get(pieceLength - 1); // Save the bottom tile
-        for (int i = pieceLength - 1; i > 0; i--) {
+        ITile temp = columnPiece.get(columnPiece.size() - 1); // Save the bottom tile
+        for (int i = columnPiece.size() - 1; i > 0; i--) {
             columnPiece.set(i, columnPiece.get(i - 1)); // Move each tile down
         }
         columnPiece.set(0, temp); // Move saved bottom to top
     }
-
-    private boolean handlePlayerTurn(ColumnsBoard board, int[] columnHeights, List<ITile> columnPiece, 
-                                     int startCol, int playerNum) {
-        int pieceLength = columnPiece.size();
-        int currentCol = startCol;
-        int topRow = -pieceLength;
-        
-        // Check if the starting column is already too high
-        if (columnHeights[currentCol] >= INVISIBLE_HEIGHT - pieceLength) {
-            return false;
+    
+    private void determineWinner() {
+        if (!twoPlayerMode) {
+            System.out.println("Game Over! Final Score: " + score1);
+        } else {
+            System.out.println("\n=== GAME OVER ===");
+            if (score1 > score2) {
+                System.out.println("Player 1 wins with a higher score!");
+            } else if (score2 > score1) {
+                System.out.println("Player 2 wins with a higher score!");
+            } else {
+                System.out.println("It's a tie!");
+            }
+            
+            System.out.println("Player 1 Score: " + score1);
+            System.out.println("Player 2 Score: " + score2);
         }
-        
-        boolean pieceLanded = false;
-        
-        while (!pieceLanded) {
-            // Clear the previous position if needed
-            if (topRow > -pieceLength) {
-                for (int i = 0; i < pieceLength; i++) {
-                    int row = topRow + i - 1;
-                    if (row >= 0 && row < board.getHeight()) {
-                        board.placeTile(null, row, currentCol);
-                    }
-                }
-            }
-            
-            // Place the piece at the new position
-            for (int i = 0; i < pieceLength; i++) {
-                int row = topRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(columnPiece.get(i), row, currentCol);
-                }
-            }
-            
-            drawBoards();
-            
-            // Check for collision for the next position below
-            if (isCollision(board, topRow + 1, currentCol, pieceLength)) {
-                for (int i = 0; i < pieceLength; i++) {
-                    int row = topRow + i;
-                    if (row >= 0 && row < board.getHeight()) {
-                        board.placeTile(columnPiece.get(i), row, currentCol);
-                    }
-                }
-                
-                // Update column height 
-                int newHeight = 0;
-                for (int row = 0; row < board.getHeight(); row++) {
-                    if (!board.isEmpty(row, currentCol)) {
-                        newHeight++;
-                    }
-                }
-                columnHeights[currentCol] = newHeight;
-                
-                // Check if the game is over
-                if (columnHeights[currentCol] >= INVISIBLE_HEIGHT) {
-                    return false;
-                }
-                
-                pieceLanded = true;
-                return true;
-            }
-            
-            // Get user input for the next move
-            String input = inputHandler.getNextMove(playerNum);
-            
-            // Handle controls based on player number
-            if (playerNum == 1) {
-                if (input.equals("a")) { // Left
-                    if (moveLeft(board, columnPiece, topRow, currentCol, pieceLength, columnHeights)) {
-                        currentCol--;
-                    }
-                } else if (input.equals("d")) { // Right
-                    if (moveRight(board, columnPiece, topRow, currentCol, pieceLength, columnHeights)) {
-                        currentCol++;
-                    }
-                } else if (input.equals("s")) { // Rotate
-                    rotatePiece(board, columnPiece, topRow, currentCol, pieceLength);
-                    continue;
-                }
-            } else { // Player 2
-                if (input.equals("j")) { // Left
-                    if (moveLeft(board, columnPiece, topRow, currentCol, pieceLength, columnHeights)) {
-                        currentCol--;
-                    }
-                } else if (input.equals("l")) { // Right
-                    if (moveRight(board, columnPiece, topRow, currentCol, pieceLength, columnHeights)) {
-                        currentCol++;
-                    }
-                } else if (input.equals("k")) { // Rotate
-                    rotatePiece(board, columnPiece, topRow, currentCol, pieceLength);
-                    continue;
-                }
-            }
-            
-            // Move down
-            topRow++;
-        }
-        
-        return true;
     }
 
-    private boolean moveLeft(ColumnsBoard board, List<ITile> columnPiece, int topRow, int currentCol, 
-                        int pieceLength, int[] columnHeights) {
-        if (currentCol <= 0) return false;
-        int landingHeight = findLandingHeight(board, currentCol - 1);
-        
-        if (landingHeight >= 0 && landingHeight < topRow + pieceLength) {
-            // Clear current position
-            for (int i = 0; i < pieceLength; i++) {
-                int row = topRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(null, row, currentCol);
-                }
-            }
-            // Place the piece on top of the existing column
-            int newTopRow = landingHeight - pieceLength + 1;
-            for (int i = 0; i < pieceLength; i++) {
-                int row = newTopRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(columnPiece.get(i), row, currentCol - 1);
-                }
-            }
-            // Update column height
-            int newHeight = 0;
-            for (int row = 0; row < board.getHeight(); row++) {
-                if (!board.isEmpty(row, currentCol - 1)) {
-                    newHeight++;
-                }
-            }
-            columnHeights[currentCol - 1] = newHeight;
-            
-            drawBoards();
-            return false;
-        }
-        // Normal left movement if there's no collision
-        else if (!isCollision(board, topRow, currentCol - 1, pieceLength)) {
-            // Clear current position
-            for (int i = 0; i < pieceLength; i++) {
-                int row = topRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(null, row, currentCol);
-                }
-            }
-            return true;
+    public String getCurrentPrompt() {
+        if (!gameInitialized || !gameRunning) {
+            return "";
         }
         
-        return false;
+        if (twoPlayerMode) {
+            if (activePlayer == 1 && !player1Lost) {
+                return "Player 1 Move (a=left, d=right, s=rotate, enter=down): ";
+            } else if (activePlayer == 2 && !player2Lost) {
+                return "Player 2 Move (j=left, l=right, k=rotate, enter=down): ";
+            } else if (player1Lost && !player2Lost) {
+                return "Player 2 Move (j=left, l=right, k=rotate, enter=down): ";
+            } else if (!player1Lost && player2Lost) {
+                return "Player 1 Move (a=left, d=right, s=rotate, enter=down): ";
+            } else {
+                return "Game Over!";
+            }
+        } else {
+            return "Move (a=left, d=right, s=rotate, enter=down): ";
+        }
     }
 
-    private boolean moveRight(ColumnsBoard board, List<ITile> columnPiece, int topRow, int currentCol, 
-                        int pieceLength, int[] columnHeights) {
-        if (currentCol >= board.getWidth() - 1) return false;
-        int landingHeight = findLandingHeight(board, currentCol + 1);
-        if (landingHeight >= 0 && landingHeight < topRow + pieceLength) {
-            // Clear current position
-            for (int i = 0; i < pieceLength; i++) {
-                int row = topRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(null, row, currentCol);
-                }
-            }
-            
-            // Place the piece on top of the existing column
-            int newTopRow = landingHeight - pieceLength + 1;
-            for (int i = 0; i < pieceLength; i++) {
-                int row = newTopRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(columnPiece.get(i), row, currentCol + 1);
-                }
-            }
-            
-            // Update column height
-            int newHeight = 0;
-            for (int row = 0; row < board.getHeight(); row++) {
-                if (!board.isEmpty(row, currentCol + 1)) {
-                    newHeight++;
-                }
-            }
-            columnHeights[currentCol + 1] = newHeight;
-            
-            drawBoards();
-            return false;
-        }
-        // Normal right movement if there's no collision
-        else if (!isCollision(board, topRow, currentCol + 1, pieceLength)) {
-            // Clear current position
-            for (int i = 0; i < pieceLength; i++) {
-                int row = topRow + i;
-                if (row >= 0 && row < board.getHeight()) {
-                    board.placeTile(null, row, currentCol);
-                }
-            }
-            return true;
-        }
-        
-        return false;
+    public boolean isTwoPlayerMode() {
+        return twoPlayerMode;
+    }
+    
+    public int getActivePlayer() {
+        return activePlayer;
+    }
+    
+    public boolean isGameRunning() {
+        return gameRunning;
+    }
+
+    public boolean isGameInitialized() {
+        return gameInitialized;
+    }
+    
+    public boolean hasPlayerLost(int playerNum) {
+        return playerNum == 1 ? player1Lost : player2Lost;
+    }
+    
+    public int getScore(int playerNum) {
+        return playerNum == 1 ? score1 : score2;
+    }
+    
+    public boolean needsNewPiece(int playerNum) {
+        return playerNum == 1 ? needNewPiece1 : needNewPiece2;
     }
     
     private boolean isCollision(ColumnsBoard board, int topRow, int col, int pieceLength) {
@@ -412,16 +446,6 @@ public class ColumnsGameEngine2pINP extends GameEngine.GameEngine {
         }
         
         return false;
-    }
-
-    private int findLandingHeight(ColumnsBoard board, int col) {
-        // Find the first empty row from the bottom
-        for (int row = board.getHeight() - 1; row >= 0; row--) {
-            if (board.isEmpty(row, col)) {
-                return row;
-            }
-        }
-        return -1;
     }
 
     private int calculateScore(int tilesCleared) {
@@ -594,8 +618,6 @@ public class ColumnsGameEngine2pINP extends GameEngine.GameEngine {
         for (int row = 0; row < board.getHeight(); row++) {
             for (int col = 0; col < board.getWidth(); col++) {
                 boardCopy[row][col] = board.getTile(row, col);
-                
-                // If this is a tile to clear, create a temporary copy for the visual effect
                 if (tilesToClear[row][col] && boardCopy[row][col] != null) {
                     // Use the existing tile but change its value to 'X'
                     ITile originalTile = board.getTile(row, col);
@@ -760,14 +782,6 @@ public class ColumnsGameEngine2pINP extends GameEngine.GameEngine {
                 System.out.print("-");
             }
             System.out.println("+");
-            
-            // Controls reminder (only show for active players)
-            if (!player1Lost) {
-                System.out.println("\nPlayer 1: a=left, d=right, s=rotate, Enter=down");
-            }
-            if (!player2Lost) {
-                System.out.println("Player 2: j=left, l=right, k=rotate, Enter=down");
-            }
         }
     }
     
