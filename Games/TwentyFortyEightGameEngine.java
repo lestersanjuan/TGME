@@ -18,7 +18,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
 	protected Integer score;
     protected User currentPlayer;
 
-    TwentyFortyEightGameEngine(Integer gameId, User player){
+    public TwentyFortyEightGameEngine(Integer gameId, User player){
     	super("2048", gameId);
         this.gameBoard = new Board(WIDTH, HEIGHT);
         for (int row = 0; row < WIDTH; row ++) {
@@ -46,6 +46,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
 
             if (currentTile.GetValue().equals("0")) { // ✅ Only place on empty spaces
                 Tile newTile = new Tile(Integer.toString(randomStart));
+                this.gameBoard.GetSpot(randomHeight, randomWidth).PopTile();
                 this.gameBoard.PlaceTile(newTile, randomHeight, randomWidth);
                 break;
             }
@@ -53,7 +54,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
     }
     
     public Boolean IsGameRunning() {
-    	return ! this.isGameOver();
+    	return this.gameRunning;
     }
     
     public boolean isGameOver() {
@@ -98,6 +99,8 @@ public class TwentyFortyEightGameEngine extends GameEngine {
         }
     
         // If we reach here, no empty spaces and no merges => game over
+        this.endGame();
+        this.gameRunning = false;
         return true;
     }
 
@@ -132,6 +135,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             for (int col = 0; col < WIDTH; col++) {
                 int newVal = (col < rowValues.size()) ? rowValues.get(col) : 0;
                 ITile newTile = new Tile(String.valueOf(newVal));
+                this.gameBoard.GetSpot(row, col).PopTile();
                 this.gameBoard.PlaceTile(newTile, row, col);
             }
         }
@@ -165,11 +169,13 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             Integer reversedCol = WIDTH - 1;
             for (Integer curr: rowValues){
                 ITile newTile = new Tile(String.valueOf(curr));
+                this.gameBoard.GetSpot(row, reversedCol).PopTile();
                 this.gameBoard.PlaceTile(newTile, row, reversedCol);
                 reversedCol--;
             }
             while (reversedCol >= 0){
                 ITile dummyTile = new Tile("0");
+                this.gameBoard.GetSpot(row, reversedCol).PopTile();
                 this.gameBoard.PlaceTile(dummyTile, row, reversedCol);
                 reversedCol--;
             }
@@ -199,12 +205,14 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // Write all merged tiles
             for (int val : colValues) {
                 ITile newTile = new Tile(String.valueOf(val));
+                this.gameBoard.GetSpot(writeRow, col).PopTile();
                 this.gameBoard.PlaceTile(newTile, writeRow, col);
                 writeRow++;
             }
             // Fill the rest with 0
             while (writeRow < HEIGHT) {
                 ITile zeroTile = new Tile("0");
+                this.gameBoard.GetSpot(writeRow, col).PopTile();
                 this.gameBoard.PlaceTile(zeroTile, writeRow, col);
                 writeRow++;
             }
@@ -240,11 +248,13 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             int writeRow = HEIGHT - 1;  // start at bottom row
             for (int val : colValues) {
                 ITile newTile = new Tile(String.valueOf(val));
+                this.gameBoard.GetSpot(writeRow, col).PopTile();
                 this.gameBoard.PlaceTile(newTile, writeRow, col);
                 writeRow--;
             }
             while (writeRow >= 0) {
                 ITile zeroTile = new Tile("0");
+                this.gameBoard.GetSpot(writeRow, col).PopTile();
                 this.gameBoard.PlaceTile(zeroTile, writeRow, col);
                 writeRow--;
             }
@@ -266,19 +276,23 @@ public class TwentyFortyEightGameEngine extends GameEngine {
         switch (command.toLowerCase()) {
             case "left":
                 left();
-                return true;
+                break;
             case "right":
                 right();
-                return true;
+                break;
             case "up":
                 up();
-                return true;
+                break;
             case "down":
                 down();
-                return true;
+                break;
             default:
                 return false;
         }
+        
+        this.isGameOver();
+        this.addRandomTile();
+        return true;
     }
     @Override
     public void MatchTiles() {

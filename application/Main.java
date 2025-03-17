@@ -43,7 +43,7 @@ public class Main extends Application implements EventHandler<ActionEvent>{
 		this.eventFireButton = new Button();
 		this.eventFireButton.setOnAction(this); //change to inner class
 		
-		this.gameScreen = new ColumnsGameScreen(WIDTH, HEIGHT, gameManager, eventFireButton);
+		this.gameScreen = new GameScreen2048(WIDTH, HEIGHT, gameManager, eventFireButton); //Move game engines to pass into gamemanager
 		
 		try {
 			
