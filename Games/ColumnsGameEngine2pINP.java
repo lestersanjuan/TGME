@@ -636,35 +636,6 @@ public class ColumnsGameEngine2pINP extends GameModules.GameEngine{
         return maxLength;
     }
 
-    private void replaceMatches(Board board, boolean[][] tilesToClear, int playerNum) {
-        // Create a copy of the board for replacement
-        ITile[][] boardCopy = new ITile[board.GetHeight()][board.GetWidth()];
-        for (int row = 0; row < board.GetHeight(); row++) {
-            for (int col = 0; col < board.GetWidth(); col++) {
-                boardCopy[row][col] = board.GetFirstTile(row, col);
-                if (tilesToClear[row][col] && boardCopy[row][col] != null) {
-                    // Use the existing tile but change its value to 'X'
-                    ITile originalTile = board.GetFirstTile(row, col);
-                    originalTile.SetValue("X");
-                }
-            }
-        }
-        
-        
-        System.out.println("Player " + playerNum + " found matches! Clearing...");
-        
-        // Restore the original board (the matches will be cleared in the calling method)
-        for (int row = 0; row < board.GetHeight(); row++) {
-            for (int col = 0; col < board.GetWidth(); col++) {
-                // If this was a tile to clear, restore its original value
-                if (tilesToClear[row][col] && boardCopy[row][col] != null) {
-                    // We'll place the original tile back - it will be cleared in the calling method
-                    board.PlaceTile(boardCopy[row][col], row, col);
-                }
-            }
-        }
-    }
-
     private void applyGravity(Board board, int[] columnHeights, int playerNum) {
         // Process each column independently
         for (int col = 0; col < board.GetWidth(); col++) {

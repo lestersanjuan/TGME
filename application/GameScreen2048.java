@@ -2,13 +2,13 @@ package application;
 
 import GameModules.Board;
 import GameModules.GameEngine;
-import GameModules.GameManager;
 import GameModules.ITile;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -18,11 +18,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 public class GameScreen2048 extends GenericGameScreen{
-	public GameScreen2048(Integer width, Integer height, GameManager gameManager, Button endGameHandler) {
-		super (width, height, gameManager, endGameHandler);
-	}
-	
-	
 	protected VBox GetBoard(Board board) { //Interfaced, use the board state first before trying to get by coords. Rn it is for the columns game
 		boardBox = new VBox();
 		boardBox.setSpacing(5); 
@@ -55,14 +50,26 @@ public class GameScreen2048 extends GenericGameScreen{
 		return boardBox;
 	}
 	
-	public Scene CreateGameScene(GameEngine gameEngine) {
+	public void EditScene(Scene gameScene, GameEngine gameEngine) {
+		gameScene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			public void handle(KeyEvent key) {
+				if(key.getCode().equals(KeyCode.W)) {
+					gameEngine.Action("up");
+				}
+				else if(key.getCode()==KeyCode.S) {
+					gameEngine.Action("down");
+				}
+				else if(key.getCode()==KeyCode.A) {
+					gameEngine.Action("left");
+				}
+				else if(key.getCode()==KeyCode.D) {
+					gameEngine.Action("right");
+				}
 
-		gamePane = new BorderPane();
-		gamePane.getChildren().add(GetBoard(gameEngine.GetBoardState()));
-		gamePane.setBottom(CreateControlPanel(gameEngine));
-		Scene scene = new Scene(gamePane, this.width, this.height);
-		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-		return scene;
+				CheckGameOver();
+				UpdateGuiBoard();
+			}
+		});
 	}
 	
 	protected VBox CreateControlPanel (GameEngine gameEngine) { //Should be an interface implementation

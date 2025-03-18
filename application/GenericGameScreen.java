@@ -15,14 +15,22 @@ public abstract class GenericGameScreen {
 	protected Integer height;
 	protected GameManager gameManager;
 	protected Button endGameHandler;
-	
-	public GenericGameScreen(Integer width, Integer height, GameManager gameManager, Button endGameHandler) {
+
+	public void SetWidth(Integer width) {
 		this.width = width;
+	}
+
+	public void SetHeight(Integer height) {
 		this.height = height;
-		this.gameManager = gameManager;
-		this.endGameHandler = endGameHandler;
 	}
 	
+	public void SetGameManager(GameManager gameManager) {
+		this.gameManager = gameManager;
+	}
+	
+	public void SetEndGameHandler(Button endGameHandler) {
+		this.endGameHandler = endGameHandler;
+	}
 	
 	protected abstract VBox GetBoard(Board board);
 	
@@ -34,8 +42,11 @@ public abstract class GenericGameScreen {
 		gamePane.setBottom(CreateControlPanel(gameEngine));
 		Scene scene = new Scene(gamePane, this.width, this.height);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		EditScene(scene, gameEngine);
 		return scene;
 	}
+	
+	public abstract void EditScene(Scene gameScene, GameEngine gameEngine);
 	
 	protected void UpdateGuiBoard() {
 		gamePane.getChildren().remove(boardBox);

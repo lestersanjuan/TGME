@@ -3,22 +3,19 @@ package application;
 import GameModules.Board;
 import GameModules.Board.Spot;
 import GameModules.GameEngine;
-import GameModules.GameManager;
 import GameModules.ITile;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class ColumnsGameScreen extends GenericGameScreen{
-	public ColumnsGameScreen(Integer width, Integer height, GameManager gameManager, Button endGameHandler) {
-		super (width, height, gameManager, endGameHandler);
-	}
-	
-	
 	protected VBox GetBoard(Board board) { //Interfaced, use the board state first before trying to get by coords. Rn it is for the columns game
 		boardBox = new VBox();
 		boardBox.setSpacing(5); 
@@ -66,6 +63,27 @@ public class ColumnsGameScreen extends GenericGameScreen{
 		return boardBox;
 	}
 
+	public void EditScene(Scene scene, GameEngine gameEngine) {
+		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			public void handle(KeyEvent key) {
+				if(key.getCode().equals(KeyCode.S)) {
+					gameEngine.Action("enter");
+				}
+				else if(key.getCode()==KeyCode.W) {
+					gameEngine.Action("s");
+				}
+				else if(key.getCode()==KeyCode.A) {
+					gameEngine.Action("a");
+				}
+				else if(key.getCode()==KeyCode.D) {
+					gameEngine.Action("d");
+				}
+
+				CheckGameOver();
+				UpdateGuiBoard();
+			}
+		});
+	}
 	
 	protected VBox CreateControlPanel (GameEngine gameEngine) { //Should be an interface implementation
 		VBox controlBox = new VBox();
