@@ -78,26 +78,43 @@ public class MainScreen extends Application {
 	}
 	
 	private Scene CreateUserSelectionScene() {
+		VBox vUserInputBox = new VBox();
 		HBox hUserSelectionBox = new HBox();
 		hUserSelectionBox.getChildren().add(new Text("Enter userId"));
 		TextField userInput = new TextField();
 		hUserSelectionBox.getChildren().add(userInput);
+
+		Text outputText = new Text("");
 		
 		Button submitButton = new Button("submit");
 		submitButton.setOnAction(new EventHandler<ActionEvent>() {
 				@Override
 				public void handle(ActionEvent event) {
 					if (event.getSource() == submitButton) {
-						Integer userId = Integer.parseInt(userInput.getText());
-						if (gameManager.IsUser(userId)) {
-							gameManager.SetCurrentUser(userId);
-							ChangeScene(CreateGameSelectionScene());
+						try {		
+							
+							Integer userId = Integer.parseInt(userInput.getText());
+							if (gameManager.IsUser(userId)) {
+								gameManager.SetCurrentUser(userId);
+								ChangeScene(CreateGameSelectionScene());
+							} else {
+								outputText.setText("Not a valid id, enter your user id");
+							}
+							
+						} catch (NumberFormatException e){
+							outputText.setText("Not a valid id, enter your numerical id");
 						}
 					}
+					
 				}
 			});
-		hUserSelectionBox.getChildren().add(submitButton);
 		
+		
+		
+		hUserSelectionBox.getChildren().add(submitButton);
+		vUserInputBox.getChildren().addAll(hUserSelectionBox, outputText);
+		
+		HBox buttonHBox = new HBox();
 		Button leaderBoardButton = new Button("leaderboards");
 		leaderBoardButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -107,9 +124,19 @@ public class MainScreen extends Application {
 				}
 			}
 		});
+		Button newUserButton = new Button("new user");
+		newUserButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if (event.getSource() == newUserButton) {
+					ChangeScene(CreateNewUserScreen());
+				}
+			}
+		});
+		buttonHBox.getChildren().addAll(leaderBoardButton, newUserButton);
 		
-		BorderPane layout = new BorderPane(hUserSelectionBox);
-		layout.setBottom(leaderBoardButton);
+		BorderPane layout = new BorderPane(vUserInputBox);
+		layout.setBottom(buttonHBox);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 		
@@ -118,6 +145,7 @@ public class MainScreen extends Application {
 	
 	
 	private Scene CreateGameSelectionScene() {	
+		VBox gameScreenBox = new VBox();
 		HBox hGameButtonBox = new HBox();
 		hGameButtonBox.getChildren().add(new Text("Select a game"));
 
@@ -137,6 +165,21 @@ public class MainScreen extends Application {
 			});
 			hGameButtonBox.getChildren().add(gameButton);
 		}
+		gameScreenBox.getChildren().add(hGameButtonBox);
+		
+		Button profileButton = new Button("view profile");
+		profileButton.setOnAction( new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent event) {
+					if (event.getSource() == profileButton) {
+						ChangeScene(CreateUserProfileScreen(gameManager.GetCurrentUser()));
+					}
+				}
+			});
+		
+		gameScreenBox.getChildren().add(profileButton);
+		
 		Button backButton = new Button("back");
 		backButton.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -148,7 +191,96 @@ public class MainScreen extends Application {
 				}
 			});
 		
-		BorderPane layout = new BorderPane(hGameButtonBox);
+		BorderPane layout = new BorderPane(gameScreenBox);
+		layout.setBottom(backButton);
+		Scene scene = new Scene(layout,WIDTH, HEIGHT);
+		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		
+		return scene;
+	}
+	
+	private Scene CreateUserProfileScreen(User user) {	
+		VBox vUserInfoBox = new VBox();
+		vUserInfoBox.getChildren().add(new Text("Username: " + user.GetName()));
+		vUserInfoBox.getChildren().add(new Text("User id: " + user.GetUserId()));
+		String lastPlayedGame = user.GetData("LastGame");
+		vUserInfoBox.getChildren().add(new Text("Last played game: " + lastPlayedGame));
+		vUserInfoBox.getChildren().add(new Text("View leaderboards to see your highscores!"));
+		
+		Button backButton = new Button("back");
+		backButton.setOnAction(new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent event) {
+					if (event.getSource() == backButton) {
+						ChangeScene(CreateGameSelectionScene());
+					}
+				}
+			});
+		
+		BorderPane layout = new BorderPane(vUserInfoBox);
+		layout.setBottom(backButton);
+		Scene scene = new Scene(layout,WIDTH, HEIGHT);
+		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		
+		return scene;
+	}
+	
+	private Scene CreateNewUserScreen() {	
+		VBox vUserInfoBox = new VBox();
+		HBox userNameBox = new HBox();
+		userNameBox.getChildren().add(new Text("Enter a username: "));
+		
+		TextField usernameTextField = new TextField();
+		userNameBox.getChildren().add(usernameTextField);
+		
+		HBox userIdBox = new HBox();
+		userNameBox.getChildren().add(new Text("Enter a userId: "));
+		
+		TextField userIdTextField = new TextField();
+		userNameBox.getChildren().add(userIdTextField);
+		Text outputText = new Text("");
+		
+		
+		Button submit = new Button("submit");
+		
+		submit.setOnAction(new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent event) {
+					if (event.getSource() == submit) {
+						try {		
+							Integer newId = Integer.parseInt(userIdTextField.getText());
+							if (gameManager.GetUser(newId) != null) {
+								outputText.setText("Id is already taken");
+							} else {
+								gameManager.AddUser(usernameTextField.getText(), newId);
+								gameManager.SetCurrentUser(newId);
+								ChangeScene(CreateGameSelectionScene());
+							}
+							
+						} catch (NumberFormatException e){
+							outputText.setText("Not a valid id, enter your numerical id");
+						}
+						
+					} 
+				}
+			});
+		
+		vUserInfoBox.getChildren().addAll(userNameBox, userIdBox, submit, outputText);
+		
+		Button backButton = new Button("back");
+		backButton.setOnAction(new EventHandler<ActionEvent>() {
+
+				@Override
+				public void handle(ActionEvent event) {
+					if (event.getSource() == backButton) {
+						ChangeScene(CreateUserSelectionScene());
+					}
+				}
+			});
+		
+		BorderPane layout = new BorderPane(vUserInfoBox);
 		layout.setBottom(backButton);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());

@@ -113,6 +113,7 @@ public class GameManager {
 	}
 	
 	public void SetScoresAfterGame() {
+		this.currentUser.SetData("LastGame", this.currentGameEngine.GetGameName());
 		GameLeaderBoard gameLeaderboard = this.leaderboard.get(currentGameEngine.GetGameId());
 		if (gameLeaderboard.GetUserScore(this.currentUser.GetUserId()) < this.currentGameEngine.GetScore()) {			
 			gameLeaderboard.SetUserScore(this.currentUser.GetUserId(), this.currentGameEngine.GetScore());

@@ -60,7 +60,6 @@ public abstract class GenericGameScreen {
 	
 	protected Boolean CheckGameOver() {
 		if (gameManager.IsGameEnded()) {
-			System.out.println("Game ended");
 			this.GameOver();
 			return true;
 		}

@@ -11,6 +11,7 @@ public class User {
 		this.name = name;
 		this.userId = id;
 		this.data = new HashMap<String, String>();
+		this.data.put("LastGame", "You haven't played a game yet!");
 	}
 	
 	public String ListScore(String gameId) {
@@ -19,6 +20,14 @@ public class User {
 	
 	public void SetScore(String gameId, String score) {
 		this.data.put(gameId, score);
+	}
+	
+	public void SetData(String key, String data) {
+		this.data.put(key, data);
+	}
+	
+	public String GetData(String key) {
+		return this.data.get(key);
 	}
 	
 	public String GetName() {
