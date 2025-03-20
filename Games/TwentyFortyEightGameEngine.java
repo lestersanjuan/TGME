@@ -50,7 +50,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             int randomWidth = random.nextInt(WIDTH);
             int randomStart = (random.nextInt(2) + 1) * 2; // 2 or 4
 
-            ITile currentTile = this.gameBoard.GetBoardState().get(randomHeight).GetSpot(randomWidth).GetFirstTile();
+            ITile currentTile = this.gameBoard.GetFirstTile(randomHeight, randomWidth);
 
             if (currentTile.GetValue().equals("0")) { // ✅ Only place on empty spaces
                 Tile newTile = new Tile(Integer.toString(randomStart));
@@ -71,7 +71,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
         // 1) Check for any empty (0) tile
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
-                ITile tile = this.gameBoard.GetBoardState().get(row).GetSpot(col).GetFirstTile();
+                ITile tile = this.gameBoard.GetFirstTile(row, col);
                 int value = Integer.parseInt(tile.GetValue());
                 if (value == 0) {
                     return false;  // Found an empty space, so not game over
@@ -83,7 +83,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
         //    (If any two adjacent tiles match, we can still make a move)
         for (int row = 0; row < size; row++) {
             for (int col = 0; col < size; col++) {
-                ITile currentTile = this.gameBoard.GetBoardState().get(row).GetSpot(col).GetFirstTile();
+                ITile currentTile = this.gameBoard.GetFirstTile(row, col);
                 int currentValue = Integer.parseInt(currentTile.GetValue());
     
                 // Check right neighbor if exists
@@ -124,7 +124,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // 1) Collect non-zero tile values in a temporary list.
             List<Integer> rowValues = new ArrayList<>();
             for (int col = 0; col < WIDTH; col++) {
-                ITile currentTile = this.gameBoard.GetBoardState().get(row).GetSpot(col).GetFirstTile();
+                ITile currentTile = this.gameBoard.GetFirstTile(row, col);
                 int val = Integer.parseInt(currentTile.GetValue());
                 if (val != 0) {
                     rowValues.add(val);
@@ -157,7 +157,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // 1) Collect non-zero tile values in a temporary list.
             List<Integer> rowValues = new ArrayList<>();
             for (int col = 0; col < WIDTH; col++) {
-                ITile currentTile = this.gameBoard.GetBoardState().get(row).GetSpot(col).GetFirstTile();
+                ITile currentTile = this.gameBoard.GetFirstTile(row, col);
                 int val = Integer.parseInt(currentTile.GetValue());
                 if (val != 0) {
                     rowValues.add(val);
@@ -195,7 +195,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
         for (int col = 0; col < WIDTH; col++) {
             List<Integer> colValues = new ArrayList<>();
             for (int row = 0; row < HEIGHT; row++) {
-                ITile currentTile = this.gameBoard.GetBoardState().get(row).GetSpot(col).GetFirstTile();
+                ITile currentTile = this.gameBoard.GetFirstTile(row, col);
                 int val = Integer.parseInt(currentTile.GetValue());
                 if (val != 0) {
                     colValues.add(val);
@@ -234,7 +234,7 @@ public class TwentyFortyEightGameEngine extends GameEngine {
             // 1) Gather all non-zero values in this column (top to bottom).
             List<Integer> colValues = new ArrayList<>();
             for (int row = 0; row < HEIGHT; row++) {
-                ITile currentTile = this.gameBoard.GetBoardState().get(row).GetSpot(col).GetFirstTile();
+                ITile currentTile = this.gameBoard.GetFirstTile(row, col);
                 int val = Integer.parseInt(currentTile.GetValue());
                 if (val != 0) {
                     colValues.add(val);

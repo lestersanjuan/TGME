@@ -18,6 +18,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -78,6 +79,8 @@ public class MainScreen extends Application {
 	}
 	
 	private Scene CreateUserSelectionScene() {
+		Text headerText = new Text("User Selection");
+		headerText.setFont(Font.font(24));	
 		VBox vUserInputBox = new VBox();
 		HBox hUserSelectionBox = new HBox();
 		hUserSelectionBox.getChildren().add(new Text("Enter userId"));
@@ -110,7 +113,6 @@ public class MainScreen extends Application {
 			});
 		
 		
-		
 		hUserSelectionBox.getChildren().add(submitButton);
 		vUserInputBox.getChildren().addAll(hUserSelectionBox, outputText);
 		
@@ -136,6 +138,7 @@ public class MainScreen extends Application {
 		buttonHBox.getChildren().addAll(leaderBoardButton, newUserButton);
 		
 		BorderPane layout = new BorderPane(vUserInputBox);
+		layout.setTop(headerText);
 		layout.setBottom(buttonHBox);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -144,7 +147,9 @@ public class MainScreen extends Application {
 	}
 	
 	
-	private Scene CreateGameSelectionScene() {	
+	private Scene CreateGameSelectionScene() {
+		Text headerText = new Text("Game Selection");
+		headerText.setFont(Font.font(24));	
 		VBox gameScreenBox = new VBox();
 		HBox hGameButtonBox = new HBox();
 		hGameButtonBox.getChildren().add(new Text("Select a game"));
@@ -167,13 +172,15 @@ public class MainScreen extends Application {
 		}
 		gameScreenBox.getChildren().add(hGameButtonBox);
 		
-		Button profileButton = new Button("view profile");
+		User currentUser = gameManager.GetCurrentUser();
+		
+		Button profileButton = new Button("view " + currentUser.GetName() + "\'s profile");
 		profileButton.setOnAction( new EventHandler<ActionEvent>() {
 
 				@Override
 				public void handle(ActionEvent event) {
 					if (event.getSource() == profileButton) {
-						ChangeScene(CreateUserProfileScreen(gameManager.GetCurrentUser()));
+						ChangeScene(CreateUserProfileScreen(currentUser));
 					}
 				}
 			});
@@ -192,6 +199,7 @@ public class MainScreen extends Application {
 			});
 		
 		BorderPane layout = new BorderPane(gameScreenBox);
+		layout.setTop(headerText);
 		layout.setBottom(backButton);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -200,6 +208,8 @@ public class MainScreen extends Application {
 	}
 	
 	private Scene CreateUserProfileScreen(User user) {	
+		Text headerText = new Text("Profile");
+		headerText.setFont(Font.font(24));
 		VBox vUserInfoBox = new VBox();
 		vUserInfoBox.getChildren().add(new Text("Username: " + user.GetName()));
 		vUserInfoBox.getChildren().add(new Text("User id: " + user.GetUserId()));
@@ -219,6 +229,7 @@ public class MainScreen extends Application {
 			});
 		
 		BorderPane layout = new BorderPane(vUserInfoBox);
+		layout.setTop(headerText);
 		layout.setBottom(backButton);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -227,6 +238,8 @@ public class MainScreen extends Application {
 	}
 	
 	private Scene CreateNewUserScreen() {	
+		Text headerText = new Text("New User Creator");
+		headerText.setFont(Font.font(24));
 		VBox vUserInfoBox = new VBox();
 		HBox userNameBox = new HBox();
 		userNameBox.getChildren().add(new Text("Enter a username: "));
@@ -281,6 +294,7 @@ public class MainScreen extends Application {
 			});
 		
 		BorderPane layout = new BorderPane(vUserInfoBox);
+		layout.setTop(headerText);
 		layout.setBottom(backButton);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -290,9 +304,13 @@ public class MainScreen extends Application {
 	
 	private Scene CreateGameOverScreen() {
 		VBox endGameInfoBox = new VBox();
-		endGameInfoBox.getChildren().add(new Text("Game Over"));
+		Text gameOverText = new Text("Game Over");
+		gameOverText.setFont(Font.font(64));
+		endGameInfoBox.getChildren().add(gameOverText);
 		HBox scoreBox = new HBox();
-		scoreBox.getChildren().add(new Text("Score: " + this.gameManager.GetScore()));
+		Text scoreText = new Text("Score: " + this.gameManager.GetScore());
+		scoreText.setFont(Font.font(24));
+		scoreBox.getChildren().add(scoreText);
 		endGameInfoBox.getChildren().add(scoreBox);
 		
 		Button backButton = new Button("back");
@@ -314,9 +332,11 @@ public class MainScreen extends Application {
 		return scene;
 	}
 	
-	private Scene CreateLeaderBoardScreen(Integer gameId) {
+	private Scene CreateLeaderBoardScreen(GameEngine gameEngine) {
+		Text leaderBoardText = new Text(gameEngine.GetGameName() + " Leaderboards");
+		leaderBoardText.setFont(Font.font(24));
 		VBox leaderBoardBox = new VBox();
-		GameLeaderBoard leaderboard = this.gameManager.GetLeaderboard(gameId);
+		GameLeaderBoard leaderboard = this.gameManager.GetLeaderboard(gameEngine.GetGameId());
 		List<Entry<Integer, Integer>> userScorePairs = leaderboard.GetSortedLeaderBoard();
 		
 		for (Entry<Integer, Integer> userScorePair : userScorePairs) {
@@ -337,6 +357,7 @@ public class MainScreen extends Application {
 			});
 		
 		BorderPane layout = new BorderPane(leaderBoardBox);
+		layout.setTop(leaderBoardText);
 		layout.setBottom(backButton);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -346,7 +367,7 @@ public class MainScreen extends Application {
 	
 	private Scene CreateGameLeaderBoardScreen() {
 		HBox gameLeaderBoardBox = new HBox();
-		gameLeaderBoardBox.getChildren().add(new Text("Select a game"));
+		gameLeaderBoardBox.getChildren().add(new Text("Select a game to view its leaderboard"));
 
 		for (GameEngine engine : gameManager.GetAllGameEngines()) {
 			Button gameButton = new Button();
@@ -356,7 +377,7 @@ public class MainScreen extends Application {
 				@Override
 				public void handle(ActionEvent event) {
 					if (event.getSource() == gameButton) {
-						ChangeScene(CreateLeaderBoardScreen(engine.GetGameId()));
+						ChangeScene(CreateLeaderBoardScreen(engine));
 					}
 				}
 			});
@@ -374,7 +395,11 @@ public class MainScreen extends Application {
 				}
 			});
 		
+		Text leaderBoardText = new Text("Leaderboards");
+		leaderBoardText.setFont(Font.font(24));
+		
 		BorderPane layout = new BorderPane(gameLeaderBoardBox);
+		layout.setTop(leaderBoardText);
 		layout.setBottom(backButton);
 		Scene scene = new Scene(layout,WIDTH, HEIGHT);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());

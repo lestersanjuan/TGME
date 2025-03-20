@@ -27,7 +27,7 @@ public class GameManager {
 	private User currentUser;
 	private Map<Integer, User> users;
 	private Map<Integer, GameEngine> games;
-	private Map<Integer, GameLeaderBoard> leaderboard; //GameId: UserId:Score
+	private Map<Integer, GameLeaderBoard> leaderboard;
 	private final static Integer DEFAULTSCORE = 0;
 
 	

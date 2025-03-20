@@ -16,7 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class ColumnsGameScreen extends GenericGameScreen{
-	protected VBox GetBoard(Board board) { //Interfaced, use the board state first before trying to get by coords. Rn it is for the columns game
+	protected VBox GetBoard(Board board) {
 		boardBox = new VBox();
 		boardBox.setSpacing(5); 
 		for (int row = 0; row < board.GetHeight(); row ++) {
@@ -85,7 +85,7 @@ public class ColumnsGameScreen extends GenericGameScreen{
 		});
 	}
 	
-	protected VBox CreateControlPanel (GameEngine gameEngine) { //Should be an interface implementation
+	protected VBox CreateControlPanel (GameEngine gameEngine) {
 		VBox controlBox = new VBox();
 		HBox controls1 = new HBox();
 		HBox controls2 = new HBox();
